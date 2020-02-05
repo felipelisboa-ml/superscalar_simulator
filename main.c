@@ -4,9 +4,17 @@
 #define SIZE_MAX_INSTRUCTION_BUFFER 16
 #define SIZE_MAX_RESERVATION_BUFFER 8
 #define NUMBER_OF_STATIONS 4
+#define ISSUE_WIDTH 2
 
 reservation_station_t ** res_stations;
+buffer_t * inst_buffer, rob;
 
+void rob_management(buffer_t * rob){
+  if(rob->get_size() > ISSUE_WIDTH)
+    rob->remove(0);
+  else
+    
+}
 void step(int issue_width, buffer_t * inst_buffer){
   
   int counter = 0;
@@ -42,6 +50,7 @@ void step(int issue_width, buffer_t * inst_buffer){
 	break;
       }
     }
+    
     //Update the latencies of the instructions that depends on the one being executed
     inst_t * current_inst = res_stations[i]->inst_id;
     int number_of_dependencies = inst->dep_down->get_size();
@@ -58,20 +67,19 @@ void step(int issue_width, buffer_t * inst_buffer){
     current_inst->actual_latency--;
     if(current_inst->actual_latency==0){
       res_stations[i]->occupied=0;
-      //PUT INTO ROB 
-    }
+      //ROB GESTION
+      rob->insert(current_inst); 
+    }  
     //ADD WRITE TO FILE
-    //DELETE FROM INSTRUCTION BUFFER AFTER WRITING
-    //ROB GESTION
+    //DELETE FROM RS INSTRUCTION BUFFER AFTER WRITING
+    res_stations[i]->inst_buffer->remove(del_index);  
   }
 }
 
 int main(){
-  //Read file operations
-  int number_of_stations = 0;
   
-  buffer_t * inst_buffer;
   inst_buffer = init_buffer(SIZE_MAX_INSTRUCTION_BUFFER);
+  rob = init_buffer(ISSUE_WIDTH);
   
   //Alocate and put instructions into buffer
   //Build dependency vectors (and initialize them)

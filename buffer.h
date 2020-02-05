@@ -20,6 +20,6 @@ int get_size();
 inst_t * get();
   
 //Removes element (FIFO policy)
-inst_t * remove();
+void remove(int pos);
 
 #endif
