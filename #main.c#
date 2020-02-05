@@ -7,6 +7,7 @@
 #define SIZE_MAX_RESERVATION_BUFFER 8
 #define NUMBER_OF_STATIONS 4
 #define ISSUE_WIDTH 2
+#define 
 
 reservation_station_t ** res_stations;
 buffer_t * inst_buffer, rob;

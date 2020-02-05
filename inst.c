@@ -8,4 +8,5 @@ inst_t * init_instruction(int initial_lat, int initial_dep_lat, inst * up, buffe
   t->dep_latency = initial_dep_lat;
   t->dep_up = up;
   t->dep_down = down;
+  t->done = 0;
 }
