@@ -10,8 +10,8 @@ typedef struct{
   int occupied;
 } reservation_station_t;
 
-//Alocate memory for buffers;
-reservation_station_t * init_res_station();
+//Initiates structures
+reservation_station_t * init_res_station(int size_buffer, int id);
 
 //See's if buffer is occupied
 int is_occupied(reservation_station_t * rs);

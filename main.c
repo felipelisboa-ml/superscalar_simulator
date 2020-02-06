@@ -1,12 +1,13 @@
+#include <stdio.h>
+#include <string.h>
 #include "inst.h"
 #include "reservation_station.h"
-#include <stdio.h>
 
 //This parameters will be defined by the input file
 #define SIZE_MAX_INSTRUCTION_BUFFER 16
 #define SIZE_MAX_RESERVATION_BUFFER 8
 #define NUMBER_OF_STATIONS 4
-#define ISSUE_WIDTH 2
+#define ISSUE_WIDTH 2 
 
 reservation_station_t ** res_stations;
 buffer_t * inst_buffer, rob;
@@ -80,23 +81,72 @@ void step(int issue_width, buffer_t * inst_buffer){
   }
 }
 
-int main(){
+int main(char * argc, char * argv[]){
+
+  FILE * fp;
+  if((fp = fopen("/inputs/test1.txt","r")) == NULL){
+    printf("Error opening file!\n");
+    exit(1);
+  }
   
-  inst_buffer = init_buffer(SIZE_MAX_INSTRUCTION_BUFFER);
-  rob = init_buffer(ISSUE_WIDTH);
+  char str[MAXCHAR];
+  int issue_width;
+  fscanf(fp,"%s %d",str,issue_width);
   
-  //Alocate and put instructions into buffer
-  //Build dependency vectors (and initialize them)
-  //inst_t * inst_read = from file
+  int number_of_stations;
+  int stations_sizes[number_of_stations];
+  int rob_size;
+  int number_of_instructions;
   
-  inst_buffer->insert(inst_read);
+  if(fscanf(fp,"%s %d",str,number_of_stations)!=2)
+    printf("Error reading number of stations\n");
+  for(int i=0; i<number_of_stations; i++){
+    if(fscanf(fp,"%s %d", str, station_sizes[i])!=2)
+      printf("Error reading station sizes\n");
+  }
   
   //Init reservation stations
-  res_stations = (reservation_station_t**) malloc(number_of_stations*sizeof(reservation_station_t))
+  res_stations = (reservation_station_t**) malloc(number_of_stations*sizeof(reservation_station_t*))
   for(int i=0; i<number_of_stations; i++){
-    res_stations[i]->init_res_stations(SIZE_MAX_RESERVATION_BUFFER);
+    res_stations[i]->init_res_stations(station_sizes[i],i);
   }
 
+  if(fscanf(fp,"%s %d", str, rob_size)!=1)
+    printf("Error reading ROB SIZE\n");
+
+  //Init rob
+  buffer_t * rob = init_buffer(rob_size);
   
+  if(fscanf(fp,"%s %d",str,number_of_instructions)!=2)
+    printf("Error reading line INSTRUCTIONS!\n");
+
+  char c_rs_vector_sizes[MAXCHAR];
+  char c_latencies[MAXCHAR];
+  
+  //Instruction buffer workin as FIFO
+  buffer_t * inst_buffer = init_buffer(SIZE_MAX_INSTRUCTION_BUFFER);
+  for(int i=0; i<number_of_instructions; i++){
+    fprintf(fp,"%s %s %s",str,c_rs_vector_sizes,c_latencies);
+    //Instantiate instruction, its latencies and its pointers to reservation stations
+    int size_rs = strlen(c_rs_vector_sizes);
+    inst_t * instruction = (inst_t*) malloc(sizeof(inst_t));
+    instruction->initial_latency = (c_latencies - '0');
+    instruction->actual_latency = instruction->initial_latency;
+    instruction->rs = malloc(size_rs*sizeof(reservation_station_t*));
+    for(int j=0; j<size_rs; j++){
+      int ctoi = (c_rs_vector_sizes[j]-'0'); 
+      switch(ctoi){
+      case 0: (*instruction->rs[j]) = &res_stations[0]; break;
+      case 1: (*instruction->rs[j]) = &res_stations[1]; break;
+      case 2: (*instruction->rs[j]) = &res_stations[2]; break;
+      case 3: (*instruction->rs[j]) = &res_stations[3]; break;
+      default: (*instruction->rs[j]) = &res_stations[0]; break;
+      } 
+    }
+    inst_buffer->insert(instruction);
+  }
+  
+  //Dependency part
+    
   //Step function
 }
