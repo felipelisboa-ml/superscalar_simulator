@@ -18,7 +18,7 @@ typedef struct{
   int done;
 } inst_t;
 
-inst_t * init_instruction(int initial_lat, int initial_dep_lat, inst * up, buffer_t * down);
+inst_t * init_instruction(int initial_lat, int initial_dep_lat, inst_t * up, buffer_t * down);
 
 inst_t * config_dependencies();
 

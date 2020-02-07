@@ -11,7 +11,7 @@ typedef struct{
 } reservation_station_t;
 
 //Initiates structures
-reservation_station_t * init_res_station(int size_buffer, int id);
+reservation_station_t * init_res_station(int size_buffer);
 
 //See's if buffer is occupied
 int is_occupied(reservation_station_t * rs);

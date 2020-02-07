@@ -2,6 +2,7 @@
 #define BUFFER_H
 
 #include "inst.h"
+#include "reservation_station.h"
 
 typedef struct{
   inst_t ** buffer;

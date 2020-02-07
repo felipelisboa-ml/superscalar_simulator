@@ -91,7 +91,8 @@ int main(char * argc, char * argv[]){
   
   char str[MAXCHAR];
   int issue_width;
-  fscanf(fp,"%s %d",str,issue_width);
+  if(fscanf(fp,"%s %d",str,issue_width)!=2)
+    printf("Error reading issue width\n");
   
   int number_of_stations;
   int stations_sizes[number_of_stations];
@@ -108,10 +109,10 @@ int main(char * argc, char * argv[]){
   //Init reservation stations
   res_stations = (reservation_station_t**) malloc(number_of_stations*sizeof(reservation_station_t*))
   for(int i=0; i<number_of_stations; i++){
-    res_stations[i]->init_res_stations(station_sizes[i],i);
+    res_stations[i]->init_res_stations(station_sizes[i]);
   }
 
-  if(fscanf(fp,"%s %d", str, rob_size)!=1)
+  if(fscanf(fp,"%s %d", str, rob_size)!=2)
     printf("Error reading ROB SIZE\n");
 
   //Init rob
@@ -130,7 +131,7 @@ int main(char * argc, char * argv[]){
     //Instantiate instruction, its latencies and its pointers to reservation stations
     int size_rs = strlen(c_rs_vector_sizes);
     inst_t * instruction = (inst_t*) malloc(sizeof(inst_t));
-    instruction->initial_latency = (c_latencies - '0');
+    instruction->initial_latency = (c_latencies[0] - '0');
     instruction->actual_latency = instruction->initial_latency;
     instruction->rs = malloc(size_rs*sizeof(reservation_station_t*));
     for(int j=0; j<size_rs; j++){
@@ -145,8 +146,6 @@ int main(char * argc, char * argv[]){
     }
     inst_buffer->insert(instruction);
   }
-  
   //Dependency part
-    
   //Step function
 }
