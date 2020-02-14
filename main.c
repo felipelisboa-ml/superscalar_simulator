@@ -1,82 +1,98 @@
 #include <stdio.h>
 #include <string.h>
+#include <limits.h>
+
 #include "inst.h"
 #include "reservation_station.h"
 
 //This parameters will be defined by the input file
 #define SIZE_MAX_INSTRUCTION_BUFFER 16
-#define SIZE_MAX_RESERVATION_BUFFER 8
-#define NUMBER_OF_STATIONS 4
-#define ISSUE_WIDTH 2 
 
 reservation_station_t ** res_stations;
 buffer_t * inst_buffer, rob;
 
 void rob_management(inst_t * finished_inst, buffer_t * rob){
-  if(rob->get_size() > ISSUE_WIDTH)
-    printf("ROB is full!\n");
-  else{
-    rob->insert(finished_inst);
-    return 1;
+}
+
+void choose_rs(inst_t * inst){
+  int min = INT_MAX;
+  int indice_res = 0;
+  for(int j=0; j<get_numberofstations(inst); j++){
+    if(get_size(inst->rs[j]->inst_buffer) < min){
+      min = get_size(inst->rs[j]->inst_buffer);
+      indice_res = j;
+    }
+  }
+  insert_element(res_stations[indice_res]->inst_buffer,inst);
+}
+
+void manage_down_dependencies(inst_t * inst){
+  int number_of_down_dep = inst->dep_down->get_size();
+  for(int i=0; i<number_of_down_dep; i++){
+    inst_t * inst_down = inst->dep_down->buffer[i];
+    for(int j=0; j<inst_down->num_of_dep; j++){
+      pair_up_dependency * up_dep = inst_down->dep_up[j];
+      if((up_dep->inst_id == inst->id)&&(up_dep->dep_latency > 0)){
+	if(up_dep->dep_latency == up_dep->init_dep_latency)
+	  up_dep->dep_latency = up_dep->dep_latency - (inst->initial_exec_latency - inst->actual_exec_latency);
+	else
+	  up_dep->dep_latency--;
+	if(up_dep->dep_latency <=0)
+	  inst_down->dep_to_solve--;
+      }
+    }
   }
 }
+
+int manage_own_dependency(inst_t * inst){
+  return ((inst->actual_exec_latency==0) ? 0 : --(inst->actual_exec_latency));
+}
+
+int put_into_FU(reservation_station_t * res){
+  int limite = res->inst_buffer->get_size();
+  int del_index;
+  for(int j=0; j < limite; j++){
+    if((!res->is_occupied)&&(res->inst_buffer[j]->dep_to_solve <= 0)){
+      res->inst_id = res->inst_buffer[j];
+      del_index = j;
+      break;
+    } 
+  }
+  return del_index; 
+}
+
 void step(int issue_width, buffer_t * inst_buffer){
   
   int counter = 0;
   
-  /* -----------------  PUTS INSTRUCTIONS INTO GENERAL INSTRUCTION BUFFER -------- */
+  /* -----------------  PLACES INSTRUCTIONS INTO CORRESPONDING RESERVATION STATIONS -------- */
   
   for(int i = 0; i<issue_width; i++){
-    //Gets first instruction from Instruction buffer
-    //Instruction fields are alocated after reading the file, in this point we consider they already have their memory
     inst_t * new_inst = buffer->remove();
-    //Chooses the least busy station
-    int min = INT_MAX;
-    int indice_res = 0;
-    for(int j = 0; j < new_inst->get_numberofstations(); j++){
-      if(new_inst->rs[j]->inst_buffer->get_size() < min){
-	min = new_inst->rs[j]->inst_buffer->get_size();
-	indice_res = j;
-      }
-    }
-    res_stations[indice_res]->inst_buffer->insert(new_inst); 
+    choose_rs(new_inst);
   }
   
   /*-----------------------STARTS TREATING EACH RESERVATION STATION--------------*/
   
   for(int i=0; i<NUMBER_OF_STATIONS; i++){
-    int limite = res_stations[i]->inst_buffer->get_size();
-    int del_index;
-    for(int j=0; j < limite; j++){
-      if((res_stations[i]->occupied==0)&&(res_stations[i]->inst_buffer[j]->dep_latency<=1)){
-	res_stations[i]->inst_id = res_stations[i]->inst_buffer[j];
-	del_index = j;
-	res_stations[i]->occupied = 1;
-	break;
-      }
-    }
+    
+    //See's if there is one instruction ready to be executed in the queu
+    //Return the index of the instruction selected out of the queu to be deleted after
+    int index_to_delete = put_into_FU(res_stations[i]);
     
     //Update the latencies of the instructions that depends on the one being executed
     inst_t * current_inst = res_stations[i]->inst_id;
-    int number_of_dependencies = inst->dep_down->get_size();
-    for(int k=0; k<number_of_dependencies; k++){
-      inst_t * inst_up = res_stations[i]->inst_id->dep_up;
-      inst_t * inst_down = res_stations[i]->inst_id->dep_down->buffer[k];
-      if(current_inst->dep_latency == current_inst->initial_dep_latency)
-	//Case where the instruction occuping the RS is being updated for the first time 
-	inst_down->lat_dep = inst_down->lat_dep - (inst_up->initial_latency - inst_up->actual_latency);
-      else
-	inst_down->lat_dep--; 
-    }
+    manage_down_dependencies(current_inst);
+    
     //Update own latency
-    current_inst->actual_latency--;
-    if(current_inst->actual_latency==0){
-      res_stations[i]->occupied=0;
+    if(manage_own_dependency(current_inst) <= 0)
       current_inst->done=1;
-      if(rob_management(current_inst,rob))
-    }  
-    //ADD WRITE TO FILE
-    //DELETE FROM RS INSTRUCTION BUFFER AFTER WRITING
+    
+    //ROB Management
+
+    //Write to file
+
+    //Delete from instruction buffer on RS
     res_stations[i]->inst_buffer->remove(del_index);  
   }
 }
@@ -125,27 +141,15 @@ int main(char * argc, char * argv[]){
   char c_latencies[MAXCHAR];
   
   //Instruction buffer workin as FIFO
-  buffer_t * inst_buffer = init_buffer(SIZE_MAX_INSTRUCTION_BUFFER);
+  buffer_t * FIFO_buffer = init_buffer(SIZE_MAX_INSTRUCTION_BUFFER);
   for(int i=0; i<number_of_instructions; i++){
     fprintf(fp,"%s %s %s",str,c_rs_vector_sizes,c_latencies);
     //Instantiate instruction, its latencies and its pointers to reservation stations
     int size_rs = strlen(c_rs_vector_sizes);
-    inst_t * instruction = (inst_t*) malloc(sizeof(inst_t));
-    instruction->initial_latency = (c_latencies[0] - '0');
-    instruction->actual_latency = instruction->initial_latency;
-    instruction->rs = malloc(size_rs*sizeof(reservation_station_t*));
-    for(int j=0; j<size_rs; j++){
-      int ctoi = (c_rs_vector_sizes[j]-'0'); 
-      switch(ctoi){
-      case 0: (*instruction->rs[j]) = &res_stations[0]; break;
-      case 1: (*instruction->rs[j]) = &res_stations[1]; break;
-      case 2: (*instruction->rs[j]) = &res_stations[2]; break;
-      case 3: (*instruction->rs[j]) = &res_stations[3]; break;
-      default: (*instruction->rs[j]) = &res_stations[0]; break;
-      } 
-    }
-    inst_buffer->insert(instruction);
+    inst_t * inst = init_instruction(size_rs,c_latencies[0] - '0',i,c_rs_vector_sizes);
+    FIFO_buffer->insert(inst);
   }
+  
   //Dependency part
   //Step function
 }
