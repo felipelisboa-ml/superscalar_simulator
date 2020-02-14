@@ -9,7 +9,7 @@
 #define SIZE_MAX_INSTRUCTION_BUFFER 16
 
 reservation_station_t ** res_stations;
-buffer_t * inst_buffer, rob;
+buffer_t * general_buffer, rob;
 
 void rob_management(inst_t * finished_inst, buffer_t * rob){
 }
@@ -27,7 +27,7 @@ void choose_rs(inst_t * inst){
 }
 
 void manage_down_dependencies(inst_t * inst){
-  int number_of_down_dep = inst->dep_down->get_size();
+  int number_of_down_dep = inst->dep_down->size;
   for(int i=0; i<number_of_down_dep; i++){
     inst_t * inst_down = inst->dep_down->buffer[i];
     for(int j=0; j<inst_down->num_of_dep; j++){
@@ -49,11 +49,11 @@ int manage_own_dependency(inst_t * inst){
 }
 
 int put_into_FU(reservation_station_t * res){
-  int limite = res->inst_buffer->get_size();
+  int limite = res->inst_buffer->size;
   int del_index;
   for(int j=0; j < limite; j++){
-    if((!res->is_occupied)&&(res->inst_buffer[j]->dep_to_solve <= 0)){
-      res->inst_id = res->inst_buffer[j];
+    if((is_occupied(res)==NULL)&&(res->inst_buffer->buffer[j]->dep_to_solve <= 0)){
+      res->inst_id = res->inst_buffer->buffer[j];
       del_index = j;
       break;
     } 
@@ -61,20 +61,20 @@ int put_into_FU(reservation_station_t * res){
   return del_index; 
 }
 
-void step(int issue_width, buffer_t * inst_buffer){
+void step(int issue_width, int num_of_stations, buffer_t * inst_buffer){
   
   int counter = 0;
   
   /* -----------------  PLACES INSTRUCTIONS INTO CORRESPONDING RESERVATION STATIONS -------- */
   
   for(int i = 0; i<issue_width; i++){
-    inst_t * new_inst = buffer->remove();
+    inst_t * new_inst = remove_element(general_buffer);
     choose_rs(new_inst);
   }
   
   /*-----------------------STARTS TREATING EACH RESERVATION STATION--------------*/
   
-  for(int i=0; i<NUMBER_OF_STATIONS; i++){
+  for(int i=0; i<num_of_stations; i++){
     
     //See's if there is one instruction ready to be executed in the queu
     //Return the index of the instruction selected out of the queu to be deleted after
@@ -141,7 +141,7 @@ int main(char * argc, char * argv[]){
   char c_latencies[MAXCHAR];
   
   //Instruction buffer workin as FIFO
-  buffer_t * FIFO_buffer = init_buffer(SIZE_MAX_INSTRUCTION_BUFFER);
+  general_buffer = init_buffer(SIZE_MAX_INSTRUCTION_BUFFER);
   for(int i=0; i<number_of_instructions; i++){
     fprintf(fp,"%s %s %s",str,c_rs_vector_sizes,c_latencies);
     //Instantiate instruction, its latencies and its pointers to reservation stations

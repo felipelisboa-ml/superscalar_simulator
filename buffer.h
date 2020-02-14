@@ -17,9 +17,9 @@ buffer_t * init_buffer(int size);
 //Inserts new elements (FIFO policy)
 void insert_element(buffer_t * buf, inst_t * added_inst);
 //Removes element (FIFO policy)
-void remove_element(int pos);
+inst_t * remove_element(buffer_t * buf);
 //Gets the current buffer size
-int get_size();
+int get_size(buffer_t * buf);
 //Returns elements (Without removing from buffer)
 inst_t * get();
   
