@@ -9,15 +9,15 @@ typedef struct buffer_t buffer_t;
 
 struct buffer_t{
   inst_t ** buffer;
-  int size;
+  int last,size;
 };
 
 //Inits the buffer
 buffer_t * init_buffer(int size);
 //Inserts new elements (FIFO policy)
-void insert_element(buffer_t * buf, inst_t * added_inst);
+int insert_element(buffer_t * buf, inst_t * added_inst);
 //Removes element (FIFO policy)
-inst_t * remove_element(buffer_t * buf);
+inst_t * remove_element(buffer_t * buf, int pos);
 //Gets the current buffer size
 int get_size(buffer_t * buf);
 //Returns elements (Without removing from buffer)

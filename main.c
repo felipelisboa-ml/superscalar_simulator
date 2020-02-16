@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <limits.h>
+#include <stdlib.h>
 
 #include "inst.h"
 #include "reservation_station.h"
@@ -68,7 +69,7 @@ void step(int issue_width, int num_of_stations, buffer_t * inst_buffer){
   /* -----------------  PLACES INSTRUCTIONS INTO CORRESPONDING RESERVATION STATIONS -------- */
   
   for(int i = 0; i<issue_width; i++){
-    inst_t * new_inst = remove_element(general_buffer);
+    inst_t * new_inst = remove_element(general_buffer,0);
     choose_rs(new_inst);
   }
   
@@ -93,47 +94,48 @@ void step(int issue_width, int num_of_stations, buffer_t * inst_buffer){
     //Write to file
 
     //Delete from instruction buffer on RS
-    res_stations[i]->inst_buffer->remove(del_index);  
+    inst_t * deleted_instruction = remove_element(res_stations[i]->inst_buffer,index_to_delete);
+    if(deleted_instruction != NULL)
+      printf("Instruction %d was deleted from RS %d \n", deleted_instruction->id, i);  
   }
 }
 
-int main(char * argc, char * argv[]){
+int main(){
 
-  FILE * fp;
-  if((fp = fopen("/inputs/test1.txt","r")) == NULL){
+  FILE * fp = NULL;
+  if((fp = fopen("test1.txt","r")) == NULL){
     printf("Error opening file!\n");
-    exit(1);
+    return -1;
   }
   
   char str[MAXCHAR];
-  int issue_width;
+  int * issue_width = (int*) malloc(sizeof(int));
   if(fscanf(fp,"%s %d",str,issue_width)!=2)
     printf("Error reading issue width\n");
   
-  int number_of_stations;
-  int stations_sizes[number_of_stations];
-  int rob_size;
-  int number_of_instructions;
-  
+  int * number_of_stations = (int*) malloc(sizeof(int));
   if(fscanf(fp,"%s %d",str,number_of_stations)!=2)
     printf("Error reading number of stations\n");
-  for(int i=0; i<number_of_stations; i++){
-    if(fscanf(fp,"%s %d", str, station_sizes[i])!=2)
+ 
+  int * stations_sizes[*number_of_stations];
+  for(int i=0; i<(*number_of_stations); i++){
+    stations_sizes[i] = (int*) malloc(sizeof(int));
+    if(fscanf(fp,"%s %d", str, stations_sizes[i])!=2)
       printf("Error reading station sizes\n");
   }
   
   //Init reservation stations
-  res_stations = (reservation_station_t**) malloc(number_of_stations*sizeof(reservation_station_t*))
-  for(int i=0; i<number_of_stations; i++){
-    res_stations[i]->init_res_stations(station_sizes[i]);
-  }
-
-  if(fscanf(fp,"%s %d", str, rob_size)!=2)
-    printf("Error reading ROB SIZE\n");
+  res_stations = (reservation_station_t**) malloc((*number_of_stations)*sizeof(reservation_station_t*));
+  for(int i=0; i<(*number_of_stations); i++)
+    res_stations[i] = init_res_station(*stations_sizes[i]);
 
   //Init rob
-  buffer_t * rob = init_buffer(rob_size);
-  
+  int * rob_size;
+  if(fscanf(fp,"%s %d", str, rob_size)!=2)
+    printf("Error reading ROB SIZE\n");
+  buffer_t * rob = init_buffer(*rob_size);
+
+  int * number_of_instructions;
   if(fscanf(fp,"%s %d",str,number_of_instructions)!=2)
     printf("Error reading line INSTRUCTIONS!\n");
 
@@ -142,12 +144,15 @@ int main(char * argc, char * argv[]){
   
   //Instruction buffer workin as FIFO
   general_buffer = init_buffer(SIZE_MAX_INSTRUCTION_BUFFER);
-  for(int i=0; i<number_of_instructions; i++){
+  for(int i=0; i<*number_of_instructions; i++){
     fprintf(fp,"%s %s %s",str,c_rs_vector_sizes,c_latencies);
     //Instantiate instruction, its latencies and its pointers to reservation stations
     int size_rs = strlen(c_rs_vector_sizes);
     inst_t * inst = init_instruction(size_rs,c_latencies[0] - '0',i,c_rs_vector_sizes);
-    FIFO_buffer->insert(inst);
+    if(insert_element(general_buffer,inst))
+      printf("Instruction %d was added to general buffer\n", inst->id);
+    else
+      printf("Error adding Instruction %d to general buffer\n", inst->id);
   }
   
   //Dependency part
