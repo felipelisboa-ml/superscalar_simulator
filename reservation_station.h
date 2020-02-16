@@ -13,12 +13,15 @@ reservation_station_t ** res_stations;
 struct reservation_station_t{
   buffer_t * inst_buffer;
   inst_t * inst_id;
+  int id;
 };
 
-//Initiates structures
-reservation_station_t * init_res_station(int size_buffer);
+/* This function is used to initialize the structure with an id and also intiialize its buffer
+ */
+reservation_station_t * init_res_station(int id, int size_buffer);
 
-//See's if buffer is occupied
+/* Checks inst_id pointer to see if the station is currently occupied
+ */
 void * is_occupied(reservation_station_t * rs);
 
 #endif

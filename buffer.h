@@ -20,7 +20,7 @@ int insert_element(buffer_t * buf, inst_t * added_inst);
 inst_t * remove_element(buffer_t * buf, int pos);
 //Gets the current buffer size
 int get_size(buffer_t * buf);
-//Returns elements (Without removing from buffer)
-inst_t * get();
+//Prints the buffer
+void print_buffer(buffer_t * buf);
   
 #endif

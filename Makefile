@@ -1,4 +1,4 @@
-CFLAGS = -g -O2
+CFLAGS = -Wall -g -O2
 LDLIBS = -lm
 OBJS = inst.o reservation_station.o buffer.o main.o
 EXE = program

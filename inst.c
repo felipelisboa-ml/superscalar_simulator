@@ -13,10 +13,18 @@ inst_t * init_instruction(int size_rs, int init_lat, int id, char vec_sizes[MAXC
   t->actual_exec_latency = init_lat;
   t->rs = malloc(size_rs*sizeof(reservation_station_t*));
   for(int j=0; j<size_rs; j++){
-    int ctoi = (vec_sizes[j] - '0');
+    int ctoi = (vec_sizes[j] - '0'); 
     t->rs[j] = res_stations[ctoi];
   }
   return t;
+}
+
+void show_host_rs(inst_t * inst){
+  printf("Instruction %d can execute in stations: ", inst->id);
+  for(int i=0; i<inst->num_of_stations; i++){
+    printf("%d ", inst->rs[i]->id);
+  }
+  printf("\n");
 }
 
 int get_numberofstations(inst_t * inst){

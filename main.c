@@ -51,7 +51,7 @@ int manage_own_dependency(inst_t * inst){
 
 int put_into_FU(reservation_station_t * res){
   int limite = res->inst_buffer->size;
-  int del_index;
+  int del_index=0;
   for(int j=0; j < limite; j++){
     if((is_occupied(res)==NULL)&&(res->inst_buffer->buffer[j]->dep_to_solve <= 0)){
       res->inst_id = res->inst_buffer->buffer[j];
@@ -103,7 +103,7 @@ void step(int issue_width, int num_of_stations, buffer_t * inst_buffer){
 int main(){
 
   FILE * fp = NULL;
-  if((fp = fopen("test1.txt","r")) == NULL){
+  if((fp = fopen("inputs/test2.txt","r")) == NULL){
     printf("Error opening file!\n");
     return -1;
   }
@@ -116,28 +116,34 @@ int main(){
   int * number_of_stations = (int*) malloc(sizeof(int));
   if(fscanf(fp,"%s %d",str,number_of_stations)!=2)
     printf("Error reading number of stations\n");
- 
+
+  printf("Issue width: %d\n", *issue_width);
+  printf("Number of stations: %d\n", *number_of_stations);
+  
   int * stations_sizes[*number_of_stations];
   for(int i=0; i<(*number_of_stations); i++){
     stations_sizes[i] = (int*) malloc(sizeof(int));
     if(fscanf(fp,"%s %d", str, stations_sizes[i])!=2)
       printf("Error reading station sizes\n");
+    printf("Station %d size: %d \n", i,  *stations_sizes[i]);
   }
   
   //Init reservation stations
   res_stations = (reservation_station_t**) malloc((*number_of_stations)*sizeof(reservation_station_t*));
   for(int i=0; i<(*number_of_stations); i++)
-    res_stations[i] = init_res_station(*stations_sizes[i]);
+    res_stations[i] = init_res_station(i,*stations_sizes[i]);
 
   //Init rob
-  int * rob_size;
+  int * rob_size = (int*) malloc(sizeof(int));
   if(fscanf(fp,"%s %d", str, rob_size)!=2)
     printf("Error reading ROB SIZE\n");
+  printf("Rob size: %d\n", *rob_size);
   buffer_t * rob = init_buffer(*rob_size);
 
-  int * number_of_instructions;
+  int * number_of_instructions = (int*) malloc(sizeof(int));
   if(fscanf(fp,"%s %d",str,number_of_instructions)!=2)
     printf("Error reading line INSTRUCTIONS!\n");
+  printf("Number of instructions: %d\n", *number_of_instructions);
 
   char c_rs_vector_sizes[MAXCHAR];
   char c_latencies[MAXCHAR];
@@ -145,7 +151,8 @@ int main(){
   //Instruction buffer workin as FIFO
   general_buffer = init_buffer(SIZE_MAX_INSTRUCTION_BUFFER);
   for(int i=0; i<*number_of_instructions; i++){
-    fprintf(fp,"%s %s %s",str,c_rs_vector_sizes,c_latencies);
+    if(fscanf(fp,"%s %s %s",str,c_rs_vector_sizes,c_latencies)!=3)
+      printf("Error reading instruction configuration!\n");
     //Instantiate instruction, its latencies and its pointers to reservation stations
     int size_rs = strlen(c_rs_vector_sizes);
     inst_t * inst = init_instruction(size_rs,c_latencies[0] - '0',i,c_rs_vector_sizes);
@@ -154,7 +161,19 @@ int main(){
     else
       printf("Error adding Instruction %d to general buffer\n", inst->id);
   }
+
+  /* To test if memory allocation worked out fine  */
+  if(general_buffer->buffer == NULL)
+    printf("Problem allocating memory\n");
+  else{
+    //printf("Estado do pointer last: %d\n", general_buffer->last);
+    for(int i=0; i<general_buffer->last; i++){
+      if(general_buffer->buffer[i]==NULL)
+	printf("Problema allocating memory!\n");
+    }
+  }
   
+  print_buffer(general_buffer);
   //Dependency part
   //Step function
 }
