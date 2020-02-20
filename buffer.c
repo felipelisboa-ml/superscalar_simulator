@@ -33,12 +33,12 @@ inst_t * remove_element(buffer_t * buf, int pos){
 }
 
 int get_size(buffer_t * buf){
-  return buf->size;
+  return buf->last;
 }
 
 void print_buffer(buffer_t * buf){
   for(int i=0; i<buf->last; i++){
     printf("Position %d: Instruction %d of latency %d\n", i,buf->buffer[i]->id,buf->buffer[i]->initial_exec_latency);
-    show_host_rs(buf->buffer[i]);
+    //show_host_rs(buf->buffer[i]);
   }
 }

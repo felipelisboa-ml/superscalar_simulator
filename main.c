@@ -169,11 +169,39 @@ int main(){
     //printf("Estado do pointer last: %d\n", general_buffer->last);
     for(int i=0; i<general_buffer->last; i++){
       if(general_buffer->buffer[i]==NULL)
-	printf("Problema allocating memory!\n");
+	printf("Problem allocating memory!\n");
     }
   }
+
+  //int * number_of_deps = (int*) malloc(sizeof(int));
+  if(fscanf(fp,"%s",str)!=1)
+    printf("Error reading dependencies header!\n");
+
+  printf("%s\n",str);
+  char first_inst[MAXCHAR];
+  char second_inst[MAXCHAR];
+  int * lat_dep = (int*) malloc(sizeof(int));
   
-  print_buffer(general_buffer);
   //Dependency part
+  while(fscanf(fp,"%s %s %d",first_inst,second_inst,lat_dep)!=EOF){
+    int first_id = first_inst[1] - '0';
+    int secnd_id = second_inst[1] - '0';
+    inst_t * t1 = NULL;
+    inst_t * t2 = NULL;
+    for(int i=0; i<get_size(general_buffer); i++){
+      //find the two instructions on general buffer based on their ID (like a hash)
+      if(general_buffer->buffer[i]->id == first_id)
+	t1 = general_buffer->buffer[i];
+      else if(general_buffer->buffer[i]->id == secnd_id)
+	t2 = general_buffer->buffer[i];
+    }
+    printf("Dependency is from %d to %d and has value %d \n",t2->id, t1->id, *lat_dep);
+    config_dependencies(t1,t2,*lat_dep);
+    //Down part works
+    print_buffer(t1->dep_down);
+    //Does the up part works too?
+    printf("------------------------------\n");
+  }
+  
   //Step function
 }

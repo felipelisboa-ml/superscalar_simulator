@@ -5,6 +5,8 @@
 #include "buffer.h"
 
 #define MAXCHAR 256
+#define MAXUPDEPS 8
+#define MAXDOWNDEPS 8
 
 //All structures are declared (even if it's redundant) before declaration in order to deal with
 //cyclic dependant structs
@@ -39,7 +41,7 @@ void show_host_rs(inst_t * inst);
 /* STILL TO CODE  
  * This function is used to configure the dependency atributes coming from the graph 
  */
-inst_t * config_dependencies();
+void config_dependencies(inst_t * up_inst, inst_t * down_inst, int dep_val);
 
 //Don't know if I'm using these
 int get_init_num_of_dep(inst_t * inst);
