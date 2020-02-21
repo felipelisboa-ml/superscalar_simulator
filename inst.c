@@ -14,9 +14,11 @@ inst_t * init_instruction(int size_rs, int init_lat, int id, char vec_sizes[MAXC
   t->actual_exec_latency = init_lat;
   t->rs = malloc(size_rs*sizeof(reservation_station_t*));
   for(int j=0; j<size_rs; j++){
-    int ctoi = (vec_sizes[j] - '0'); 
-    t->rs[j] = res_stations[ctoi];
+    int ctoi = (vec_sizes[j] - '0');
+    //cópia
+    t->rs[j] = &(*res_stations[ctoi]);
   }
+  t->dep_down = NULL;
   t->dep_up = NULL;
   return t;
 }
@@ -50,6 +52,7 @@ void config_dependencies(inst_t * up_inst, inst_t * down_inst, int dep_val){
   while(1){
     //Adds to the first free up dependency spot found
     if(down_inst->dep_up[i]->inst_id == -1){
+      down_inst->num_of_dep++;
       down_inst->dep_up[i]->inst_id = up_inst->id;
       down_inst->dep_up[i]->init_dep_latency = dep_val;
       down_inst->dep_up[i]->dep_latency = dep_val;
@@ -66,3 +69,21 @@ int get_numberofstations(inst_t * inst){
 int get_init_num_of_dep(inst_t * inst){
   return inst->num_of_dep;
 }
+
+void print_up_deps(inst_t * inst){
+  for(int i=0; i<MAXUPDEPS; i++){
+    if(inst->dep_up[i]->inst_id != -1)
+      printf("Father: %d, latency: %d \n", inst->dep_up[i]->inst_id, inst->dep_up[i]->dep_latency);
+  }
+}
+
+void print_deps(inst_t * inst){
+  //Should print dependencies from dependant instructions
+  for(int i=0; i<get_size(inst->dep_down); i++){
+    for(int j=0; j<inst->dep_down->buffer[i]->num_of_dep; j++){
+      printf("Inst %d dependant of inst %d with latency : %d \n", inst->dep_down->buffer[i]->id, inst->id, inst->dep_down->buffer[i]->dep_up[j]->dep_latency);
+    }
+  }
+}
+
+

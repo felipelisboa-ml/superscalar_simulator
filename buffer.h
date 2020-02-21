@@ -14,7 +14,8 @@ struct buffer_t{
 
 //Inits the buffer
 buffer_t * init_buffer(int size);
-//Inserts new elements (FIFO policy)
+//Inserts new elements (FIFO policy)#include "buffer.h"
+
 int insert_element(buffer_t * buf, inst_t * added_inst);
 //Removes element (FIFO policy)
 inst_t * remove_element(buffer_t * buf, int pos);

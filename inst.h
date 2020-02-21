@@ -38,10 +38,15 @@ inst_t * init_instruction(int size_rs, int init_lat, int id, char vec_sizes[MAXC
  */
 void show_host_rs(inst_t * inst);
 
-/* STILL TO CODE  
- * This function is used to configure the dependency atributes coming from the graph 
+/* This function is used to configure the dependency atributes coming from the graph 
  */
 void config_dependencies(inst_t * up_inst, inst_t * down_inst, int dep_val);
+
+/* Prints up dependencies. Needs to be a special function since it isn't a normal buffer */
+void print_up_deps(inst_t * inst);
+
+/* Prints all up dependencies from instructions on dep_down buffer */
+void print_deps(inst_t * inst);
 
 //Don't know if I'm using these
 int get_init_num_of_dep(inst_t * inst);

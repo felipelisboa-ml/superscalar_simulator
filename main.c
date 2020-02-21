@@ -11,6 +11,7 @@
 
 reservation_station_t ** res_stations;
 buffer_t * general_buffer, rob;
+buffer_t * completed_instructions;
 
 void rob_management(inst_t * finished_inst, buffer_t * rob){
 }
@@ -18,20 +19,31 @@ void rob_management(inst_t * finished_inst, buffer_t * rob){
 void choose_rs(inst_t * inst){
   int min = INT_MAX;
   int indice_res = 0;
+  printf("Instruction %d can be deployed to %d stations\n", inst->id, get_numberofstations(inst));
+  //HAS TO ASSOCIATE THE RESERVATION STATION ON THE INSTRUCTION TO THE GLOBAL ONE
+  insert_element(inst->rs[0]->inst_buffer,inst);
+  printf("Inserted into RS %d\n", inst->rs[0]->id);
+  
+  /* STILL TO IMPLEMENT CHOOSE THE LEAST BUSY
   for(int j=0; j<get_numberofstations(inst); j++){
+    
     if(get_size(inst->rs[j]->inst_buffer) < min){
       min = get_size(inst->rs[j]->inst_buffer);
       indice_res = j;
     }
-  }
-  insert_element(res_stations[indice_res]->inst_buffer,inst);
+  }rintf("Chosen RS for instruction %d: %d\n", new_inst->id, rs);
+  insert_element(inst->rs[indice_res]->inst_buffer,inst);
+  print_buffer(inst->rs[indice_res]->inst_buffer);
+  return indice_res;
+  */
 }
 
 void manage_down_dependencies(inst_t * inst){
-  int number_of_down_dep = inst->dep_down->size;
+  int number_of_down_dep = get_size(inst->dep_down);
   for(int i=0; i<number_of_down_dep; i++){
     inst_t * inst_down = inst->dep_down->buffer[i];
-    for(int j=0; j<inst_down->num_of_dep; j++){
+    int number_of_up_dep = inst_down->num_of_dep;
+    for(int j=0; j<number_of_up_dep; j++){
       pair_up_dependency * up_dep = inst_down->dep_up[j];
       if((up_dep->inst_id == inst->id)&&(up_dep->dep_latency > 0)){
 	if(up_dep->dep_latency == up_dep->init_dep_latency)
@@ -69,25 +81,42 @@ void step(int issue_width, int num_of_stations, buffer_t * inst_buffer){
   /* -----------------  PLACES INSTRUCTIONS INTO CORRESPONDING RESERVATION STATIONS -------- */
   
   for(int i = 0; i<issue_width; i++){
-    inst_t * new_inst = remove_element(general_buffer,0);
+    inst_t * new_inst = remove_element(general_buffer,0); 
     choose_rs(new_inst);
   }
   
   /*-----------------------STARTS TREATING EACH RESERVATION STATION--------------*/
+  for(int i=0; i<num_of_stations; i++){
+    printf("Instruction buffer from RS %d \n", res_stations[i]->id);
+    print_buffer(res_stations[i]->inst_buffer);
+  }
   
   for(int i=0; i<num_of_stations; i++){
+
+    printf("=============================\n");
     
     //See's if there is one instruction ready to be executed in the queu
     //Return the index of the instruction selected out of the queu to be deleted after
     int index_to_delete = put_into_FU(res_stations[i]);
-    
+    printf("Instruction %d was chosen to go into FU of RS  %d\n", res_stations[i]->inst_id->id, res_stations[i]->id);
+
     //Update the latencies of the instructions that depends on the one being executed
     inst_t * current_inst = res_stations[i]->inst_id;
-    manage_down_dependencies(current_inst);
+
+    //print_buffer(res_stations[i]->inst_id->dep_down);
+    
+    if(current_inst->dep_down!=NULL){
+      printf("BEFORE MANAGING DEPENDENCIES:\n");
+      print_deps(current_inst);
+      manage_down_dependencies(current_inst);
+      printf("AFTER MANAGING DEPENDENCIES:\n");
+      print_deps(current_inst);  
+    }
     
     //Update own latency
     if(manage_own_dependency(current_inst) <= 0)
-      current_inst->done=1;
+      insert_element(completed_instructions,current_inst);
+      //current_inst->done=1;
     
     //ROB Management
 
@@ -96,14 +125,14 @@ void step(int issue_width, int num_of_stations, buffer_t * inst_buffer){
     //Delete from instruction buffer on RS
     inst_t * deleted_instruction = remove_element(res_stations[i]->inst_buffer,index_to_delete);
     if(deleted_instruction != NULL)
-      printf("Instruction %d was deleted from RS %d \n", deleted_instruction->id, i);  
+      printf("Instruction %d was deleted from RS %d instruction buffer \n", deleted_instruction->id, i);  
   }
 }
 
 int main(){
 
   FILE * fp = NULL;
-  if((fp = fopen("inputs/test2.txt","r")) == NULL){
+  if((fp = fopen("inputs/test1.txt","r")) == NULL){
     printf("Error opening file!\n");
     return -1;
   }
@@ -184,6 +213,7 @@ int main(){
   
   //Dependency part
   while(fscanf(fp,"%s %s %d",first_inst,second_inst,lat_dep)!=EOF){
+    //printf("%s %s %d\n",first_inst,second_inst,*lat_dep);
     int first_id = first_inst[1] - '0';
     int secnd_id = second_inst[1] - '0';
     inst_t * t1 = NULL;
@@ -195,13 +225,31 @@ int main(){
       else if(general_buffer->buffer[i]->id == secnd_id)
 	t2 = general_buffer->buffer[i];
     }
-    printf("Dependency is from %d to %d and has value %d \n",t2->id, t1->id, *lat_dep);
+    //printf("Dependency is from %d to %d and has value %d \n",t2->id, t1->id, *lat_dep);
     config_dependencies(t1,t2,*lat_dep);
-    //Down part works
-    print_buffer(t1->dep_down);
-    //Does the up part works too?
-    printf("------------------------------\n");
+    //Test's dep_down buffer from father
+    //print_buffer(t1->dep_down);
+    //Test's dep_up buffer from child
+    //print_up_deps(t2);
+    //printf("------------------------------\n");
   }
   
   //Step function
+  int completed = 0;
+  int clock = 0;
+  printf("==================================\n");
+  printf("Starting algorithm\n");
+  printf("==================================\n");
+
+  completed_instructions = init_buffer(*number_of_instructions);
+  //Change the condition, until all the instructions are done
+  while(!completed){
+    printf("CLOCK CYCLE %d\n",clock);
+    //ends when all the instructions are in the completed list
+    if(completed_instructions->last == completed_instructions->size)
+      completed=1;
+    step(*issue_width,*number_of_stations,general_buffer);
+    clock++;
+  }
+  
 }

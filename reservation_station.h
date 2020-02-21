@@ -24,4 +24,6 @@ reservation_station_t * init_res_station(int id, int size_buffer);
  */
 void * is_occupied(reservation_station_t * rs);
 
+int check_if_empty(reservation_station_t * rs);
+
 #endif
