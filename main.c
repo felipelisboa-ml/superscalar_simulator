@@ -47,6 +47,7 @@ void step(int issue_width, int num_of_stations, buffer_t * inst_buffer,FILE* f_o
     }
 
     /* ------- WRITES TO OUTPUT FILE -------- */
+    // write in Reservation stations columns
     fprintf(f_out,"                   ");
     if(get_size(res_stations[i]->inst_buffer) == 0){
       fprintf(f_out,"-- ");
@@ -56,6 +57,7 @@ void step(int issue_width, int num_of_stations, buffer_t * inst_buffer,FILE* f_o
         fprintf(f_out,"I%d ",res_stations[i]->inst_buffer->buffer[k]->id);
       }
     }
+    // write in FUnits columns
     fprintf(f_out,"                   ");
     if(res_stations[i]->inst_id != NULL){
       fprintf(f_out,"I%d ",res_stations[i]->inst_id->id);
