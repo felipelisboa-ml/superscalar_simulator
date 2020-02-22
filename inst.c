@@ -20,6 +20,7 @@ inst_t * init_instruction(int size_rs, int init_lat, int id, char vec_sizes[MAXC
   }
   t->dep_down = NULL;
   t->dep_up = NULL;
+  t->dep_to_solve = 0;
   return t;
 }
 
@@ -84,6 +85,19 @@ void print_deps(inst_t * inst){
       printf("Inst %d dependant of inst %d with latency : %d \n", inst->dep_down->buffer[i]->id, inst->id, inst->dep_down->buffer[i]->dep_up[j]->dep_latency);
     }
   }
+}
+
+static int count_up_deps(inst_t * inst){
+  int count=0;
+  if(inst->dep_up!=NULL)
+    for(int i=0; i<MAXUPDEPS; i++)
+      if(inst->dep_up[i]->inst_id != -1) count++;
+  return count;
+}
+
+int calculate_up_deps(inst_t * inst){
+  inst->dep_to_solve = count_up_deps(inst);
+  return inst->dep_to_solve;
 }
 
 

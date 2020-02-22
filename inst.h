@@ -34,21 +34,18 @@ struct inst_t{
  */
 inst_t * init_instruction(int size_rs, int init_lat, int id, char vec_sizes[MAXCHAR]);
 
-/* This function prints which reservation stations the instruction passed as parameter can be executed in
- */
-void show_host_rs(inst_t * inst);
-
 /* This function is used to configure the dependency atributes coming from the graph 
  */
 void config_dependencies(inst_t * up_inst, inst_t * down_inst, int dep_val);
 
-/* Prints up dependencies. Needs to be a special function since it isn't a normal buffer */
+int calculate_up_deps(inst_t * inst);
+  
+/* DEBUGGING FUNCTIONS */
+void show_host_rs(inst_t * inst);
 void print_up_deps(inst_t * inst);
-
-/* Prints all up dependencies from instructions on dep_down buffer */
 void print_deps(inst_t * inst);
 
-//Don't know if I'm using these
+/* SOME GETTERS */
 int get_init_num_of_dep(inst_t * inst);
 int get_numberofstations(inst_t * inst);
 

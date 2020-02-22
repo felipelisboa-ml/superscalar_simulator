@@ -19,7 +19,8 @@ void rob_management(inst_t * finished_inst, buffer_t * rob){
 void choose_rs(inst_t * inst){
   int min = INT_MAX;
   int indice_res = 0;
-  printf("Instruction %d can be deployed to %d stations\n", inst->id, get_numberofstations(inst));
+  int possible_stations = get_numberofstations(inst);
+  printf("Instruction %d can be deployed to %d stations\n", inst->id, possible_stations);
   //HAS TO ASSOCIATE THE RESERVATION STATION ON THE INSTRUCTION TO THE GLOBAL ONE
   insert_element(inst->rs[0]->inst_buffer,inst);
   printf("Inserted into RS %d\n", inst->rs[0]->id);
@@ -57,14 +58,22 @@ void manage_down_dependencies(inst_t * inst){
   }
 }
 
-int manage_own_dependency(inst_t * inst){
+int manage_own_latency(inst_t * inst){
   return ((inst->actual_exec_latency==0) ? 0 : --(inst->actual_exec_latency));
 }
 
 int put_into_FU(reservation_station_t * res){
-  int limite = res->inst_buffer->size;
-  int del_index=0;
+  int limite = get_size(res->inst_buffer);
+  int del_index=-1
   for(int j=0; j < limite; j++){
+    /*
+    if(is_occupied(res)!=NULL)
+      return -2;
+    else if(res->inst_buffer->buffer[j]->dep_to_solve > 0)
+      return -1;
+    */
+      
+      
     if((is_occupied(res)==NULL)&&(res->inst_buffer->buffer[j]->dep_to_solve <= 0)){
       res->inst_id = res->inst_buffer->buffer[j];
       del_index = j;
@@ -81,8 +90,8 @@ void step(int issue_width, int num_of_stations, buffer_t * inst_buffer){
   /* -----------------  PLACES INSTRUCTIONS INTO CORRESPONDING RESERVATION STATIONS -------- */
   
   for(int i = 0; i<issue_width; i++){
-    inst_t * new_inst = remove_element(general_buffer,0); 
-    choose_rs(new_inst);
+    inst_t * new_inst = remove_element(general_buffer,0);
+    if(new_inst!=NULL) choose_rs(new_inst);
   }
   
   /*-----------------------STARTS TREATING EACH RESERVATION STATION--------------*/
@@ -98,34 +107,45 @@ void step(int issue_width, int num_of_stations, buffer_t * inst_buffer){
     //See's if there is one instruction ready to be executed in the queu
     //Return the index of the instruction selected out of the queu to be deleted after
     int index_to_delete = put_into_FU(res_stations[i]);
-    printf("Instruction %d was chosen to go into FU of RS  %d\n", res_stations[i]->inst_id->id, res_stations[i]->id);
-
-    //Update the latencies of the instructions that depends on the one being executed
-    inst_t * current_inst = res_stations[i]->inst_id;
-
-    //print_buffer(res_stations[i]->inst_id->dep_down);
-    
-    if(current_inst->dep_down!=NULL){
-      printf("BEFORE MANAGING DEPENDENCIES:\n");
-      print_deps(current_inst);
-      manage_down_dependencies(current_inst);
-      printf("AFTER MANAGING DEPENDENCIES:\n");
-      print_deps(current_inst);  
+    if(index_to_delete == -1){
+      if(res_stations[i]->id == NULL)
+	
+      printf("RS %d has no available instructions to execute or station os occupied\n", res_stations[i]->id);
+      //continue;
     }
-    
-    //Update own latency
-    if(manage_own_dependency(current_inst) <= 0)
-      insert_element(completed_instructions,current_inst);
-      //current_inst->done=1;
-    
-    //ROB Management
+    //If there is some instruction being executed
+    if(res_stations[i]->inst_id != NULL){
 
-    //Write to file
+      printf("Instruction %d is currently at FU of RS  %d\n", res_stations[i]->inst_id->id, res_stations[i]->id);
+      //Update the latencies of the nstructions that depends on the one being executed
+      inst_t * current_inst = res_stations[i]->inst_id;
+      //print_buffer(res_stations[i]->inst_id->dep_down);
 
-    //Delete from instruction buffer on RS
-    inst_t * deleted_instruction = remove_element(res_stations[i]->inst_buffer,index_to_delete);
-    if(deleted_instruction != NULL)
-      printf("Instruction %d was deleted from RS %d instruction buffer \n", deleted_instruction->id, i);  
+      //Update own latency
+      int act_inst_latency = manage_own_latency(current_inst);
+      if(act_inst_latency <= 0)
+	insert_element(completed_instructions,current_inst);
+        //current_inst->done=1;
+    
+      if(current_inst->dep_down!=NULL){
+	printf("BEFORE MANAGING DEPENDENCIES:\n");
+	print_deps(current_inst);
+	manage_down_dependencies(current_inst);
+	printf("AFTER MANAGING DEPENDENCIES:\n");
+	print_deps(current_inst);  
+      }
+      
+      //ROB Management
+
+      //Write to file
+
+      //Delete from instruction buffer on RS
+      if(index_to_delete >= 0){
+	inst_t * deleted_instruction = remove_element(res_stations[i]->inst_buffer,index_to_delete);
+	if(deleted_instruction != NULL)
+	  printf("Instruction %d was deleted from RS %d instruction buffer \n", deleted_instruction->id, i);
+      }
+    }
   }
 }
 
@@ -213,7 +233,7 @@ int main(){
   
   //Dependency part
   while(fscanf(fp,"%s %s %d",first_inst,second_inst,lat_dep)!=EOF){
-    //printf("%s %s %d\n",first_inst,second_inst,*lat_dep);
+    printf("%s %s %d\n",first_inst,second_inst,*lat_dep);
     int first_id = first_inst[1] - '0';
     int secnd_id = second_inst[1] - '0';
     inst_t * t1 = NULL;
@@ -233,6 +253,11 @@ int main(){
     //print_up_deps(t2);
     //printf("------------------------------\n");
   }
+
+  //Calculates the number of dependencies to solve for each instruction added to the buffer
+  for(int i=0; i<get_size(general_buffer); i++){
+    printf("Up Deps to solve from Inst %d: %d\n",general_buffer->buffer[i]->id,calculate_up_deps(general_buffer->buffer[i]));
+  }
   
   //Step function
   int completed = 0;
@@ -240,9 +265,10 @@ int main(){
   printf("==================================\n");
   printf("Starting algorithm\n");
   printf("==================================\n");
-
+  
   completed_instructions = init_buffer(*number_of_instructions);
-  //Change the condition, until all the instructions are done
+  //Change the condition, until all the instructions are donevoid calculate_up_deps(inst_t * inst)
+
   while(!completed){
     printf("CLOCK CYCLE %d\n",clock);
     //ends when all the instructions are in the completed list
@@ -251,5 +277,4 @@ int main(){
     step(*issue_width,*number_of_stations,general_buffer);
     clock++;
   }
-  
 }
