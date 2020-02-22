@@ -13,6 +13,10 @@ reservation_station_t ** res_stations;
 buffer_t * general_buffer, rob;
 buffer_t * completed_instructions;
 
+typedef enum{
+  empty_queu,occupied,not_eligible
+}codes;
+
 void rob_management(inst_t * finished_inst, buffer_t * rob){
 }
 
@@ -63,24 +67,24 @@ int manage_own_latency(inst_t * inst){
 }
 
 int put_into_FU(reservation_station_t * res){
+  int del_index=0;
   int limite = get_size(res->inst_buffer);
-  int del_index=-1
-  for(int j=0; j < limite; j++){
-    /*
-    if(is_occupied(res)!=NULL)
-      return -2;
-    else if(res->inst_buffer->buffer[j]->dep_to_solve > 0)
-      return -1;
-    */
-      
-      
-    if((is_occupied(res)==NULL)&&(res->inst_buffer->buffer[j]->dep_to_solve <= 0)){
-      res->inst_id = res->inst_buffer->buffer[j];
-      del_index = j;
-      break;
-    } 
+  if(limite == 0)
+    return -3;
+  else{
+    for(int j=0; j < limite; j++){
+      if(is_occupied(res)!=NULL)
+	return -2;
+      else if(res->inst_buffer->buffer[j]->dep_to_solve > 0)
+	return -1;
+      else{
+	res->inst_id = res->inst_buffer->buffer[j];
+	del_index = j;
+	break;
+      }
+    }
   }
-  return del_index; 
+  return del_index;
 }
 
 void step(int issue_width, int num_of_stations, buffer_t * inst_buffer){
@@ -107,12 +111,13 @@ void step(int issue_width, int num_of_stations, buffer_t * inst_buffer){
     //See's if there is one instruction ready to be executed in the queu
     //Return the index of the instruction selected out of the queu to be deleted after
     int index_to_delete = put_into_FU(res_stations[i]);
-    if(index_to_delete == -1){
-      if(res_stations[i]->id == NULL)
-	
-      printf("RS %d has no available instructions to execute or station os occupied\n", res_stations[i]->id);
-      //continue;
+    switch(index_to_delete){
+    case -3: printf("RS %d QUEU IS EMPTY\n", res_stations[i]->id); break;
+    case -2: printf("RS %d is OCCUPIED\n", res_stations[i]->id); break;
+    case -1: printf("INSTRUCTIONS IN QUEU ARE NOT ELIGIBLE TO EXECUTE, STILL HAVE DEPS TO SOLVE\n"); break;
+    default: break;
     }
+    
     //If there is some instruction being executed
     if(res_stations[i]->inst_id != NULL){
 
@@ -123,8 +128,10 @@ void step(int issue_width, int num_of_stations, buffer_t * inst_buffer){
 
       //Update own latency
       int act_inst_latency = manage_own_latency(current_inst);
-      if(act_inst_latency <= 0)
+      if(act_inst_latency <= 0){
 	insert_element(completed_instructions,current_inst);
+	res_stations[i]->inst_id = NULL;
+      }
         //current_inst->done=1;
     
       if(current_inst->dep_down!=NULL){
@@ -267,14 +274,17 @@ int main(){
   printf("==================================\n");
   
   completed_instructions = init_buffer(*number_of_instructions);
-  //Change the condition, until all the instructions are donevoid calculate_up_deps(inst_t * inst)
 
   while(!completed){
     printf("CLOCK CYCLE %d\n",clock);
     //ends when all the instructions are in the completed list
-    if(completed_instructions->last == completed_instructions->size)
+    if(completed_instructions->last == completed_instructions->size){
       completed=1;
-    step(*issue_width,*number_of_stations,general_buffer);
+      printf("==================================\n");
+      printf("Algorithm completed!\n");
+      printf("==================================\n");
+    }
+    else step(*issue_width,*number_of_stations,general_buffer);
     clock++;
   }
 }
