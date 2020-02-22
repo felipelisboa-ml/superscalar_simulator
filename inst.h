@@ -38,8 +38,20 @@ inst_t * init_instruction(int size_rs, int init_lat, int id, char vec_sizes[MAXC
  */
 void config_dependencies(inst_t * up_inst, inst_t * down_inst, int dep_val);
 
+/* See's how many upward dependencies a given instruction has */
 int calculate_up_deps(inst_t * inst);
-  
+
+/* This function updates the upwards dependencies of all intructions in the downward dependency vector  of a given instruction */
+void manage_down_dependencies(inst_t * inst);
+
+/* Updates its own execution latency */
+int manage_own_latency(inst_t * inst);
+
+/* This function is responsible to choose a reservation instruction for a given instruction 
+   It takes the choise to put in the first option, but that could be changed
+*/
+void choose_rs(inst_t * inst);
+ 
 /* DEBUGGING FUNCTIONS */
 void show_host_rs(inst_t * inst);
 void print_up_deps(inst_t * inst);

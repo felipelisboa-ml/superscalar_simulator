@@ -2,10 +2,6 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-/* Most of the initialization work is done while reading the file,
-   so this function isn't called at any point
-*/
-
 inst_t * init_instruction(int size_rs, int init_lat, int id, char vec_sizes[MAXCHAR]){
   inst_t * t = (inst_t*) malloc(sizeof(inst_t));
   t->id = id;
@@ -22,14 +18,6 @@ inst_t * init_instruction(int size_rs, int init_lat, int id, char vec_sizes[MAXC
   t->dep_up = NULL;
   t->dep_to_solve = 0;
   return t;
-}
-
-void show_host_rs(inst_t * inst){
-  printf("Instruction %d can execute in stations: ", inst->id);
-  for(int i=0; i<inst->num_of_stations; i++){
-    printf("%d ", inst->rs[i]->id);
-  }
-  printf("\n");
 }
 
 static inst_t * allocate_updependency_buffer(inst_t * inst){
@@ -63,12 +51,73 @@ void config_dependencies(inst_t * up_inst, inst_t * down_inst, int dep_val){
   }
 }
 
-int get_numberofstations(inst_t * inst){
-  return inst->num_of_stations;
+static int count_up_deps(inst_t * inst){
+  int count=0;
+  if(inst->dep_up!=NULL)
+    for(int i=0; i<MAXUPDEPS; i++)
+      if(inst->dep_up[i]->inst_id != -1) count++;
+  return count;
 }
 
-int get_init_num_of_dep(inst_t * inst){
-  return inst->num_of_dep;
+int calculate_up_deps(inst_t * inst){
+  inst->dep_to_solve = count_up_deps(inst);
+  return inst->dep_to_solve;
+}
+
+void manage_down_dependencies(inst_t * inst){
+  int number_of_down_dep = get_size(inst->dep_down);
+  for(int i=0; i<number_of_down_dep; i++){
+    inst_t * inst_down = inst->dep_down->buffer[i];
+    int number_of_up_dep = inst_down->num_of_dep;
+    for(int j=0; j<number_of_up_dep; j++){
+      pair_up_dependency * up_dep = inst_down->dep_up[j];
+      if((up_dep->inst_id == inst->id)&&(up_dep->dep_latency > 0)){
+	if(up_dep->dep_latency == up_dep->init_dep_latency)
+	  up_dep->dep_latency = up_dep->dep_latency - (inst->initial_exec_latency - inst->actual_exec_latency);
+	else
+	  up_dep->dep_latency--;
+	if(up_dep->dep_latency <=0)
+	  inst_down->dep_to_solve--;
+      }
+    }
+  }
+}
+
+void choose_rs(inst_t * inst){
+
+  // Chooses first RS possible
+  int possible_stations = get_numberofstations(inst);
+  printf("Instruction %d can be deployed to %d stations\n", inst->id, possible_stations);
+  insert_element(inst->rs[0]->inst_buffer,inst);
+  printf("Inserted into RS %d\n", inst->rs[0]->id);
+  
+  /* STILL TO IMPLEMENT CHOOSE THE LEAST BUSY
+  int min = INT_MAX;
+  int indice_res = 0;
+  for(int j=0; j<get_numberofstations(inst); j++){
+    
+    if(get_size(inst->rs[j]->inst_buffer) < min){
+      min = get_size(inst->rs[j]->inst_buffer);
+      indice_res = j;
+    }
+  }rintf("Chosen RS for instruction %d: %d\n", new_inst->id, rs);
+  insert_element(inst->rs[indice_res]->inst_buffer,inst);
+  print_buffer(inst->rs[indice_res]->inst_buffer);
+  return indice_res;
+  */
+}
+
+
+int manage_own_latency(inst_t * inst){
+  return ((inst->actual_exec_latency==0) ? 0 : --(inst->actual_exec_latency));
+}
+
+void show_host_rs(inst_t * inst){
+  printf("Instruction %d can execute in stations: ", inst->id);
+  for(int i=0; i<inst->num_of_stations; i++){
+    printf("%d ", inst->rs[i]->id);
+  }
+  printf("\n");
 }
 
 void print_up_deps(inst_t * inst){
@@ -87,17 +136,14 @@ void print_deps(inst_t * inst){
   }
 }
 
-static int count_up_deps(inst_t * inst){
-  int count=0;
-  if(inst->dep_up!=NULL)
-    for(int i=0; i<MAXUPDEPS; i++)
-      if(inst->dep_up[i]->inst_id != -1) count++;
-  return count;
+int get_numberofstations(inst_t * inst){
+  return inst->num_of_stations;
 }
 
-int calculate_up_deps(inst_t * inst){
-  inst->dep_to_solve = count_up_deps(inst);
-  return inst->dep_to_solve;
+int get_init_num_of_dep(inst_t * inst){
+  return inst->num_of_dep;
 }
+
+
 
 

@@ -24,6 +24,17 @@ reservation_station_t * init_res_station(int id, int size_buffer);
  */
 void * is_occupied(reservation_station_t * rs);
 
+/* Checks inst_id value to see if the station is occupied. Basically a getter */
 int check_if_empty(reservation_station_t * rs);
+
+/* Decides wether an instruction will be taken from Reservation Station Queu to functional unit
+   It returns -3 in case the queu is already empty
+   It returns -2 in case the RS is currently occupied
+   It returns -1 in case the intructions in the quere have unsolved dependencies
+   Otherwise it returns the index of the chosen intruction going into FU, 
+   this index will later be used to delete it from the RS buffer
+*/
+int put_into_FU(reservation_station_t * res);
+
 
 #endif

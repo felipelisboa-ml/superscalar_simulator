@@ -11,7 +11,7 @@ reservation_station_t * init_res_station(int id, int size_buffer){
 }
 
 void * is_occupied(reservation_station_t * rs){
-  if(rs->inst_id == NULL) return NULL;
+  return rs->inst_id;
 }
 
 int check_if_empty(reservation_station_t * rs){
@@ -22,4 +22,25 @@ int check_if_empty(reservation_station_t * rs){
   }
   //Return 1 if it's empty
   return 1;
+}
+
+int put_into_FU(reservation_station_t * res){
+  int del_index=0;
+  int limite = get_size(res->inst_buffer);
+  if(limite == 0)
+    return -3;
+  else{
+    for(int j=0; j < limite; j++){
+      if(is_occupied(res)!=NULL)
+	return -2;
+      else if(res->inst_buffer->buffer[j]->dep_to_solve > 0)
+	return -1;
+      else{
+	res->inst_id = res->inst_buffer->buffer[j];
+	del_index = j;
+	break;
+      }
+    }
+  }
+  return del_index;
 }

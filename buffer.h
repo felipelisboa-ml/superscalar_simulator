@@ -14,12 +14,11 @@ struct buffer_t{
 
 //Inits the buffer
 buffer_t * init_buffer(int size);
-//Inserts new elements (FIFO policy)#include "buffer.h"
-
+//Inserts new elements at the last position
 int insert_element(buffer_t * buf, inst_t * added_inst);
-//Removes element (FIFO policy)
+//Removes element from a given position (and moves the hole list)
 inst_t * remove_element(buffer_t * buf, int pos);
-//Gets the current buffer size
+//Gets the current buffer occupation
 int get_size(buffer_t * buf);
 //Prints the buffer
 void print_buffer(buffer_t * buf);

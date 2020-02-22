@@ -12,103 +12,30 @@ reservation_station_t ** res_stations;
 buffer_t * general_buffer, rob;
 buffer_t * completed_instructions;
 
-typedef enum{
-  empty_queu,occupied,not_eligible
-}codes;
-
 void rob_management(inst_t * finished_inst, buffer_t * rob){
-}
-
-void choose_rs(inst_t * inst){
-  int min = INT_MAX;
-  int indice_res = 0;
-  int possible_stations = get_numberofstations(inst);
-  printf("Instruction %d can be deployed to %d stations\n", inst->id, possible_stations);
-  //HAS TO ASSOCIATE THE RESERVATION STATION ON THE INSTRUCTION TO THE GLOBAL ONE
-  insert_element(inst->rs[0]->inst_buffer,inst);
-  printf("Inserted into RS %d\n", inst->rs[0]->id);
-  
-  /* STILL TO IMPLEMENT CHOOSE THE LEAST BUSY
-  for(int j=0; j<get_numberofstations(inst); j++){
-    
-    if(get_size(inst->rs[j]->inst_buffer) < min){
-      min = get_size(inst->rs[j]->inst_buffer);
-      indice_res = j;
-    }
-  }rintf("Chosen RS for instruction %d: %d\n", new_inst->id, rs);
-  insert_element(inst->rs[indice_res]->inst_buffer,inst);
-  print_buffer(inst->rs[indice_res]->inst_buffer);
-  return indice_res;
-  */
-}
-
-void manage_down_dependencies(inst_t * inst){
-  int number_of_down_dep = get_size(inst->dep_down);
-  for(int i=0; i<number_of_down_dep; i++){
-    inst_t * inst_down = inst->dep_down->buffer[i];
-    int number_of_up_dep = inst_down->num_of_dep;
-    for(int j=0; j<number_of_up_dep; j++){
-      pair_up_dependency * up_dep = inst_down->dep_up[j];
-      if((up_dep->inst_id == inst->id)&&(up_dep->dep_latency > 0)){
-	if(up_dep->dep_latency == up_dep->init_dep_latency)
-	  up_dep->dep_latency = up_dep->dep_latency - (inst->initial_exec_latency - inst->actual_exec_latency);
-	else
-	  up_dep->dep_latency--;
-	if(up_dep->dep_latency <=0)
-	  inst_down->dep_to_solve--;
-      }
-    }
-  }
-}
-
-int manage_own_latency(inst_t * inst){
-  return ((inst->actual_exec_latency==0) ? 0 : --(inst->actual_exec_latency));
-}
-
-int put_into_FU(reservation_station_t * res){
-  int del_index=0;
-  int limite = get_size(res->inst_buffer);
-  if(limite == 0)
-    return -3;
-  else{
-    for(int j=0; j < limite; j++){
-      if(is_occupied(res)!=NULL)
-	return -2;
-      else if(res->inst_buffer->buffer[j]->dep_to_solve > 0)
-	return -1;
-      else{
-	res->inst_id = res->inst_buffer->buffer[j];
-	del_index = j;
-	break;
-      }
-    }
-  }
-  return del_index;
 }
 
 void step(int issue_width, int num_of_stations, buffer_t * inst_buffer){
   
-  int counter = 0;
-  
-  /* -----------------  PLACES INSTRUCTIONS INTO CORRESPONDING RESERVATION STATIONS -------- */
+  /* --------  TAKES INSTRUCTIONS FROM QUEU AND PLACE INTO CORRESPONDING RESERVATION STATIONS -------- */
   
   for(int i = 0; i<issue_width; i++){
     inst_t * new_inst = remove_element(general_buffer,0);
     if(new_inst!=NULL) choose_rs(new_inst);
   }
   
-  /*-----------------------STARTS TREATING EACH RESERVATION STATION--------------*/
+  /*-----------------------TREATS RESERVATION STATION ONE AT A TIME --------------*/
+
+  /* DEBUGGING PURPOSES
   for(int i=0; i<num_of_stations; i++){
     printf("Instruction buffer from RS %d \n", res_stations[i]->id);
     print_buffer(res_stations[i]->inst_buffer);
   }
+  */
   
   for(int i=0; i<num_of_stations; i++){
 
-    printf("=============================\n");
-    
-    //See's if there is one instruction ready to be executed in the queu
-    //Return the index of the instruction selected out of the queu to be deleted after
+    /* -------------- LOOKS INTO BUFFER INSIDE THE CURRENT RESERVATION STATION ------------ */
     int index_to_delete = put_into_FU(res_stations[i]);
     switch(index_to_delete){
     case -3: printf("RS %d QUEU IS EMPTY\n", res_stations[i]->id); break;
@@ -117,22 +44,24 @@ void step(int issue_width, int num_of_stations, buffer_t * inst_buffer){
     default: break;
     }
     
-    //If there is some instruction being executed
+    /* ------------------- IF THERE IS CURRENTLY A INSTRUCTION IN THE FU ---------- */
     if(res_stations[i]->inst_id != NULL){
 
+      /* DEBUGING PURPOSES
       printf("Instruction %d is currently at FU of RS  %d\n", res_stations[i]->inst_id->id, res_stations[i]->id);
-      //Update the latencies of the nstructions that depends on the one being executed
+      print_buffer(res_stations[i]->inst_id->dep_down);
+      */
+      
       inst_t * current_inst = res_stations[i]->inst_id;
-      //print_buffer(res_stations[i]->inst_id->dep_down);
 
-      //Update own latency
+      /* -------------- UPDATES ITS OWN EXECUTION LATENCY AND ADD TO COMPLETION BUFFER IF IT'S DONE ----------------  */
       int act_inst_latency = manage_own_latency(current_inst);
       if(act_inst_latency <= 0){
 	insert_element(completed_instructions,current_inst);
 	res_stations[i]->inst_id = NULL;
       }
-        //current_inst->done=1;
-    
+
+      /* ------- IF THE CURRENT INSTRUCTION HAS CHILDREN, UPDATE THEIR DEPENDENCY LATENCIES ---------- */
       if(current_inst->dep_down!=NULL){
 	printf("BEFORE MANAGING DEPENDENCIES:\n");
 	print_deps(current_inst);
@@ -141,11 +70,13 @@ void step(int issue_width, int num_of_stations, buffer_t * inst_buffer){
 	print_deps(current_inst);  
       }
       
-      //ROB Management
+      /* ------- MANAGES THE ROB --------- */
 
-      //Write to file
 
-      //Delete from instruction buffer on RS
+      /* ------- WRITES TO OUTPUT FILE -------- */
+
+
+      /* ------- DELETE FROM INTRUCTION FROM RS BUFFER */
       if(index_to_delete >= 0){
 	inst_t * deleted_instruction = remove_element(res_stations[i]->inst_buffer,index_to_delete);
 	if(deleted_instruction != NULL)
