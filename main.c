@@ -245,6 +245,7 @@ int main(){
       printf("==================================\n");
       printf("Algorithm completed!\n");
       printf("==================================\n");
+      fclose(fp);
       fclose(f_out);
     }
     else step(*issue_width,*number_of_stations,general_buffer,f_out,clock);

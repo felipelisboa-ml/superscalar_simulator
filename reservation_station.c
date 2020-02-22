@@ -32,13 +32,13 @@ int put_into_FU(reservation_station_t * res){
   else{
     for(int j=0; j < limite; j++){
       if(is_occupied(res)!=NULL)
-	return -2;
+        return -2;
       else if(res->inst_buffer->buffer[j]->dep_to_solve > 0)
-	return -1;
+        return -1;
       else{
-	res->inst_id = res->inst_buffer->buffer[j];
-	del_index = j;
-	break;
+      	res->inst_id = res->inst_buffer->buffer[j];
+      	del_index = j;
+      	break;
       }
     }
   }
