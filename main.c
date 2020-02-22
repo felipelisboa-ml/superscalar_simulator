@@ -6,7 +6,6 @@
 #include "inst.h"
 #include "reservation_station.h"
 
-//This parameters will be defined by the input file
 #define SIZE_MAX_INSTRUCTION_BUFFER 16
 
 reservation_station_t ** res_stations;
