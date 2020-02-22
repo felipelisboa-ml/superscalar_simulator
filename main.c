@@ -5,16 +5,18 @@
 
 #include "inst.h"
 #include "reservation_station.h"
+#include "circ_buffer.h"
 
 #define SIZE_MAX_INSTRUCTION_BUFFER 16
 
 //This is a test for git branches
 
 reservation_station_t ** res_stations;
-buffer_t * general_buffer, rob;
+buffer_t * general_buffer;
 buffer_t * completed_instructions;
+circ_buffer_t * rob;
 
-void rob_management(inst_t * finished_inst, buffer_t * rob){
+void rob_management(inst_t * finished_inst){
 }
 
 void step(int issue_width, int num_of_stations, buffer_t * inst_buffer,FILE* f_out,int clock){
@@ -58,7 +60,8 @@ void step(int issue_width, int num_of_stations, buffer_t * inst_buffer,FILE* f_o
       }
     }
     // write in FUnits columns
-    fprintf(f_out,"                   ");
+    char* s = "                   ";
+    fprintf(f_out,"%s",s);
     if(res_stations[i]->inst_id != NULL){
       fprintf(f_out,"I%d ",res_stations[i]->inst_id->id);
     }
@@ -150,7 +153,8 @@ int main(){
   if(fscanf(fp,"%s %d", str, rob_size)!=2)
     printf("Error reading ROB SIZE\n");
   printf("Rob size: %d\n", *rob_size);
-  buffer_t * rob = init_buffer(*rob_size);
+  circ_buffer_t * rob = init_buffer_circ(*rob_size);
+
 
   int * number_of_instructions = (int*) malloc(sizeof(int));
   if(fscanf(fp,"%s %d",str,number_of_instructions)!=2)
