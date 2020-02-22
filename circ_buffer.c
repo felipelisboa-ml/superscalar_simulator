@@ -8,7 +8,7 @@ circ_buffer_t * init_buffer_circ(int size){
   circ_buffer_t * b = (circ_buffer_t *) malloc(sizeof(circ_buffer_t));
   b->circ_buffer = (inst_t**) malloc (size*sizeof(inst_t*));
   b->head = 0;
-  b->tail = 0;
+  b->tail = -1;
   b->size = size;
   return b;
 }
@@ -16,14 +16,13 @@ circ_buffer_t * init_buffer_circ(int size){
 //Inserts new elements at the tail if it's possible
 int insert_element_circ(circ_buffer_t * buf, inst_t * added_inst){
   int next=(buf->tail+1) % (buf->size);
-  if(next == buf->head)   // circular buffer is full
+  if(next == buf->head && buf->tail != -1)   // circular buffer is full
     return 0;
   else{
     buf->circ_buffer[next] = added_inst;
     buf->tail = next;
     return 1;
   }
-
 }
 
 //Removes element from the head

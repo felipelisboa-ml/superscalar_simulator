@@ -19,7 +19,7 @@ circ_buffer_t * rob;
 void rob_management(inst_t * finished_inst){
 }
 
-void step(int issue_width, int num_of_stations, buffer_t * inst_buffer,FILE* f_out,int clock){
+void step(int issue_width, int num_of_stations, buffer_t * inst_buffer,FILE* f_out,int clock,circ_buffer_t * rob){
 
   /* --------  TAKES INSTRUCTIONS FROM QUEU AND PLACE INTO CORRESPONDING RESERVATION STATIONS -------- */
 
@@ -48,8 +48,8 @@ void step(int issue_width, int num_of_stations, buffer_t * inst_buffer,FILE* f_o
     default: break;
     }
 
-    /* ------- WRITES TO OUTPUT FILE -------- */
-    // write in Reservation stations columns
+    /* --------------------------- WRITES TO OUTPUT FILE --------------------------------- */
+    // Reservation stations columns
     fprintf(f_out,"                   ");
     if(get_size(res_stations[i]->inst_buffer) == 0){
       fprintf(f_out,"-- ");
@@ -59,7 +59,7 @@ void step(int issue_width, int num_of_stations, buffer_t * inst_buffer,FILE* f_o
         fprintf(f_out,"I%d ",res_stations[i]->inst_buffer->buffer[k]->id);
       }
     }
-    // write in FUnits columns
+    // FUnits columns
     char* s = "                   ";
     fprintf(f_out,"%s",s);
     if(res_stations[i]->inst_id != NULL){
@@ -82,8 +82,9 @@ void step(int issue_width, int num_of_stations, buffer_t * inst_buffer,FILE* f_o
       /* -------------- UPDATES ITS OWN EXECUTION LATENCY AND ADD TO COMPLETION BUFFER IF IT'S DONE ----------------  */
       int act_inst_latency = manage_own_latency(current_inst);
       if(act_inst_latency <= 0){
+        current_inst->done = 1;
       	insert_element(completed_instructions,current_inst);
-      	res_stations[i]->inst_id = NULL;
+      	//res_stations[i]->inst_id = NULL;
       }
 
       /* ------- IF THE CURRENT INSTRUCTION HAS CHILDREN, UPDATE THEIR DEPENDENCY LATENCIES ---------- */
@@ -95,9 +96,20 @@ void step(int issue_width, int num_of_stations, buffer_t * inst_buffer,FILE* f_o
       	print_deps(current_inst);
       }
 
-      /* ------- MANAGES THE ROB --------- */
-
-
+      /* ------------------------------------ MANAGES THE ROB ------------------------------------------------- */
+      // adds finished instruction in the ROB
+      int state;
+      if(current_inst->done == 1){
+        state = insert_element_circ(rob,current_inst);
+        if(state == 1)
+          res_stations[i]->inst_id = NULL;
+      }
+      // removes instructions from the ROB
+      /*int cpt = rob->head;
+      while(rob->circ_buffer[cpt] != NULL){
+        if(rob->circ_buffer[cpt]->done)
+        cpt = (cpt+1)%(rob->size);
+      }*/
 
       /* ------- DELETE FROM INTRUCTION FROM RS BUFFER */
       if(index_to_delete >= 0){
@@ -105,6 +117,20 @@ void step(int issue_width, int num_of_stations, buffer_t * inst_buffer,FILE* f_o
       	if(deleted_instruction != NULL)
       	  printf("Instruction %d was deleted from RS %d instruction buffer \n", deleted_instruction->id, i);
       }
+    }
+  }
+  /* --------------------------- WRITES TO OUTPUT FILE --------------------------------- */
+  // writes in ROB's column
+  char* s = "                    ";
+  fprintf(f_out,"%s",s);
+  if(rob->circ_buffer[rob->head] == NULL){
+    fprintf(f_out,"-- ");
+  }
+  else{
+    int cpt = rob->head;
+    while(rob->circ_buffer[cpt] != NULL){
+      fprintf(f_out,"I%d ",rob->circ_buffer[cpt]->id);
+      cpt = (cpt+1)%(rob->size);
     }
   }
   fprintf(f_out,"\n");
@@ -255,7 +281,7 @@ int main(){
       fclose(fp);
       fclose(f_out);
     }
-    else step(*issue_width,*number_of_stations,general_buffer,f_out,clock);
+    else step(*issue_width,*number_of_stations,general_buffer,f_out,clock,rob);
     clock++;
   }
 }
