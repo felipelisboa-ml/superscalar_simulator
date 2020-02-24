@@ -19,7 +19,7 @@ circ_buffer_t * rob;
 void rob_management(inst_t * finished_inst){
 }
 
-void step(int issue_width, int num_of_stations, buffer_t * inst_buffer,FILE* f_out,int clock,circ_buffer_t * rob){
+void step(int issue_width, int num_of_stations, buffer_t * inst_buffer,FILE* f_out,int clock,circ_buffer_t * rob,int *number_of_instructions){
 
   /* --------  TAKES INSTRUCTIONS FROM QUEU AND PLACE INTO CORRESPONDING RESERVATION STATIONS -------- */
 
@@ -105,14 +105,18 @@ void step(int issue_width, int num_of_stations, buffer_t * inst_buffer,FILE* f_o
           res_stations[i]->inst_id = NULL;
       }
       // removes instructions from the ROB
-      /*int cpt = rob->head;
-      while(rob->circ_buffer[cpt] != NULL){
-        if(rob->circ_buffer[cpt]->done)
-        cpt = (cpt+1)%(rob->size);
-      }*/
-
+      int cpt = rob->head;
+      for(int l=0;l<(*number_of_instructions);l++){
+	int cpt = rob->head;
+	while(rob->circ_buffer[cpt] != NULL){
+		if(rob->circ_buffer[cpt]->id == l)
+			remove_element_circ(
+		cpt = (cpt+1)%(rob->size);
+	}
+      }
+	//remove avec position
       /* ------- DELETE FROM INTRUCTION FROM RS BUFFER */
-      if(index_to_delete >= 0){
+      if(index_to_delete >= 0 && res_stations[i]->inst_id != NULL){
       	inst_t * deleted_instruction = remove_element(res_stations[i]->inst_buffer,index_to_delete);
       	if(deleted_instruction != NULL)
       	  printf("Instruction %d was deleted from RS %d instruction buffer \n", deleted_instruction->id, i);
@@ -281,7 +285,7 @@ int main(){
       fclose(fp);
       fclose(f_out);
     }
-    else step(*issue_width,*number_of_stations,general_buffer,f_out,clock,rob);
+    else step(*issue_width,*number_of_stations,general_buffer,f_out,clock,rob,number_of_instructions);
     clock++;
   }
 }
