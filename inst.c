@@ -130,8 +130,9 @@ void print_up_deps(inst_t * inst){
 void print_deps(inst_t * inst){
   //Should print dependencies from dependant instructions
   for(int i=0; i<get_size(inst->dep_down); i++){
-    for(int j=0; j<inst->dep_down->buffer[i]->num_of_dep; j++){
-      printf("Inst %d dependant of inst %d with latency : %d \n", inst->dep_down->buffer[i]->id, inst->id, inst->dep_down->buffer[i]->dep_up[j]->dep_latency);
+    inst_t * down = inst->dep_down->buffer[i];
+    for(int j=0; j<(down->num_of_dep); j++){
+      printf("Inst %d dependant of inst %d with latency : %d \n", down->id, down->dep_up[j]->inst_id, down->dep_up[j]->dep_latency);
     }
   }
 }

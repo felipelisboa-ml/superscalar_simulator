@@ -7,6 +7,7 @@
 #include "reservation_station.h"
 
 #define SIZE_MAX_INSTRUCTION_BUFFER 16
+#define MAXITER 20
 
 reservation_station_t ** res_stations;
 buffer_t * general_buffer, rob;
@@ -36,6 +37,7 @@ void step(int issue_width, int num_of_stations, buffer_t * inst_buffer){
   for(int i=0; i<num_of_stations; i++){
 
     /* -------------- LOOKS INTO BUFFER INSIDE THE CURRENT RESERVATION STATION ------------ */
+    printf("----TREATING RS %d ----- \n", res_stations[i]->id);
     int index_to_delete = put_into_FU(res_stations[i]);
     switch(index_to_delete){
     case -3: printf("RS %d QUEU IS EMPTY\n", res_stations[i]->id); break;
@@ -89,7 +91,7 @@ void step(int issue_width, int num_of_stations, buffer_t * inst_buffer){
 int main(){
 
   FILE * fp = NULL;
-  if((fp = fopen("inputs/test1.txt","r")) == NULL){
+  if((fp = fopen("inputs/test2.txt","r")) == NULL){
     printf("Error opening file!\n");
     return -1;
   }
@@ -201,11 +203,12 @@ int main(){
   int clock = 0;
   printf("==================================\n");
   printf("Starting algorithm\n");
-  printf("==================================\n");
   
   completed_instructions = init_buffer(*number_of_instructions);
 
   while(!completed){
+    if(clock >= MAXITER) break;
+    printf("===================================\n");
     printf("CLOCK CYCLE %d\n",clock);
     //ends when all the instructions are in the completed list
     if(completed_instructions->last == completed_instructions->size){
@@ -217,4 +220,5 @@ int main(){
     else step(*issue_width,*number_of_stations,general_buffer);
     clock++;
   }
+  return 0;
 }
