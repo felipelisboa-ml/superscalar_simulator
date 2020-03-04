@@ -189,7 +189,7 @@ int main(int argc, char * argv[]){
   
   //Dependency part
   while(fscanf(fp,"%s %s %d",first_inst,second_inst,lat_dep)!=EOF){
-    //printf("%s %s %d\n",first_inst,second_inst,*lat_dep);
+    printf("%s %s %d\n",first_inst,second_inst,*lat_dep);
     int first_id = first_inst[1] - '0';
     int secnd_id = second_inst[1] - '0';
     inst_t * t1 = NULL;
@@ -206,8 +206,8 @@ int main(int argc, char * argv[]){
 
   //Calculates the number of dependencies to solve for each instruction added to the buffer
   for(int i=0; i<get_size(general_buffer); i++){
-    int x = calculate_up_deps(general_buffer->buffer[i]);
-    //printf("Up Deps to solve from Inst %d: %d\n",general_buffer->buffer[i]->id,calculate_up_deps(general_buffer->buffer[i]));
+    //int x = calculate_up_deps(general_buffer->buffer[i]);
+    printf("Up Deps to solve from Inst %d: %d\n",general_buffer->buffer[i]->id,calculate_up_deps(general_buffer->buffer[i]));
   }
 
   /* ------- WRITE THE FIRST LINE IN THE OUTPUT FILE --------- */
@@ -228,8 +228,8 @@ int main(int argc, char * argv[]){
 
   while(!completed){
     if(clock >= MAXITER) break;
-    //printf("===================================\n");
-    //printf("CLOCK CYCLE %d\n",clock);
+    printf("===================================\n");
+    printf("CLOCK CYCLE %d\n",clock);
     fprintf(f_out,"%d",clock);
     //ends when all the instructions are in the completed list
     if(completed_instructions->last == completed_instructions->size){

@@ -1,0 +1,9 @@
+CLOCK CYCLE	RS0 	FU0	RS1 	FU1	ROB
+0		I0 	I0	--	--	--
+1		--	I0	I1 	--	--
+2		--	I0	I1 I2 	I1	--
+3		I3 	--	I2 	I2	--
+4		I3 I4 	--	--	I2	--
+5		I3 I4 	I3	--	--	--
+6		I4 	I4	--	--	--
+7
