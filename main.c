@@ -40,61 +40,34 @@ void step(int issue_width, int num_of_stations, FILE * f_out,buffer_t * inst_buf
   
   /*-----------------------TREATS RESERVATION STATION ONE AT A TIME --------------*/
 
-  /* DEBUGGING PURPOSES
-  for(int i=0; i<num_of_stations; i++){
-    printf("Instruction buffer from RS %d \n", res_stations[i]->id);
-    print_buffer(res_stations[i]->inst_buffer);
-  }
-  */
   fprintf(f_out,"\t");
+  
   for(int i=0; i<num_of_stations; i++){
 
     /* -------------- LOOKS INTO BUFFER INSIDE THE CURRENT RESERVATION STATION ------------ */
-    printf("----TREATING RS %d ----- \n", res_stations[i]->id);
     int index_to_delete = put_into_FU(res_stations[i]);
-    switch(index_to_delete){
-    case -3: printf("RS %d QUEU IS EMPTY\n", res_stations[i]->id); break;
-    case -2: printf("RS %d is OCCUPIED\n", res_stations[i]->id); break;
-    case -1: printf("INSTRUCTIONS IN QUEU ARE NOT ELIGIBLE TO EXECUTE, STILL HAVE DEPS TO SOLVE\n"); break;
-    default: break;
-    }
-
     write_to_file(f_out,res_stations[i]);
     
     /* ------------------- IF THERE IS CURRENTLY A INSTRUCTION IN THE FU ---------- */
     if(res_stations[i]->inst_id != NULL){
-
-      /* DEBUGING PURPOSES
-      printf("Instruction %d is currently at FU of RS  %d\n", res_stations[i]->inst_id->id, res_stations[i]->id);
-      print_buffer(res_stations[i]->inst_id->dep_down);
-      */
       
       inst_t * current_inst = res_stations[i]->inst_id;
-
+      
       /* -------------- UPDATES ITS OWN EXECUTION LATENCY AND ADD TO COMPLETION BUFFER IF IT'S DONE ----------------  */
       int act_inst_latency = manage_own_latency(current_inst);
       if(act_inst_latency <= 0){
 	insert_element(completed_instructions,current_inst);
 	res_stations[i]->inst_id = NULL;
       }
-
+      
       /* ------- IF THE CURRENT INSTRUCTION HAS CHILDREN, UPDATE THEIR DEPENDENCY LATENCIES ---------- */
-      if(current_inst->dep_down!=NULL){
-	printf("BEFORE MANAGING DEPENDENCIES:\n");
-	print_deps(current_inst);
+      if(current_inst->dep_down!=NULL)
 	manage_down_dependencies(current_inst);
-	printf("AFTER MANAGING DEPENDENCIES:\n");
-	print_deps(current_inst);  
-      }
       
       /* ------- MANAGES THE ROB --------- */
       
       /* ------- DELETE FROM INTRUCTION FROM RS BUFFER */
-      if(index_to_delete >= 0){
-	inst_t * deleted_instruction = remove_element(res_stations[i]->inst_buffer,index_to_delete);
-	if(deleted_instruction != NULL)
-	  printf("Instruction %d was deleted from RS %d instruction buffer \n", deleted_instruction->id, i);
-      }
+      if(index_to_delete >= 0) remove_element(res_stations[i]->inst_buffer,index_to_delete);
     }
   }
   fprintf(f_out,"\t--\n");
@@ -124,16 +97,12 @@ int main(int argc, char * argv[]){
   int * number_of_stations = (int*) malloc(sizeof(int));
   if(fscanf(fp,"%s %d",str,number_of_stations)!=2)
     printf("Error reading number of stations\n");
-
-  //printf("Issue width: %d\n", *issue_width);
-  //printf("Number of stations: %d\n", *number_of_stations);
   
   int * stations_sizes[*number_of_stations];
   for(int i=0; i<(*number_of_stations); i++){
     stations_sizes[i] = (int*) malloc(sizeof(int));
     if(fscanf(fp,"%s %d", str, stations_sizes[i])!=2)
       printf("Error reading station sizes\n");
-    //printf("Station %d size: %d \n", i,  *stations_sizes[i]);
   }
   
   //Init reservation stations
@@ -145,13 +114,11 @@ int main(int argc, char * argv[]){
   int * rob_size = (int*) malloc(sizeof(int));
   if(fscanf(fp,"%s %d", str, rob_size)!=2)
     printf("Error reading ROB SIZE\n");
-  //printf("Rob size: %d\n", *rob_size);
   buffer_t * rob = init_buffer(*rob_size);
 
   int * number_of_instructions = (int*) malloc(sizeof(int));
   if(fscanf(fp,"%s %d",str,number_of_instructions)!=2)
     printf("Error reading line INSTRUCTIONS!\n");
-  //printf("Number of instructions: %d\n", *number_of_instructions);
 
   char c_rs_vector_sizes[MAXCHAR];
   char c_latencies[MAXCHAR];
@@ -165,9 +132,7 @@ int main(int argc, char * argv[]){
     int size_rs = strlen(c_rs_vector_sizes);
     inst_t * inst = init_instruction(size_rs,c_latencies[0] - '0',i,c_rs_vector_sizes);
     if(!insert_element(general_buffer,inst))
-      //printf("Instruction %d was added to general buffer\n", inst->id);
-      //else
-      printf("Error adding Instruction %d to general buffer\n", inst->id);
+      printf("Error adding Instruction %d to general buffer\n", inst->id);      
   }
 
   /* To test if memory allocation worked out fine  */
@@ -179,17 +144,16 @@ int main(int argc, char * argv[]){
 	printf("Problem allocating memory!\n");
     }
   }
+  
   if(fscanf(fp,"%s",str)!=1)
     printf("Error reading dependencies header!\n");
 
-  //printf("%s\n",str);
   char first_inst[MAXCHAR];
   char second_inst[MAXCHAR];
   int * lat_dep = (int*) malloc(sizeof(int));
   
   //Dependency part
   while(fscanf(fp,"%s %s %d",first_inst,second_inst,lat_dep)!=EOF){
-    //printf("%s %s %d\n",first_inst,second_inst,*lat_dep);
     int first_id = first_inst[1] - '0';
     int secnd_id = second_inst[1] - '0';
     inst_t * t1 = NULL;
@@ -205,10 +169,8 @@ int main(int argc, char * argv[]){
   }
 
   //Calculates the number of dependencies to solve for each instruction added to the buffer
-  for(int i=0; i<get_size(general_buffer); i++){
-    int x = calculate_up_deps(general_buffer->buffer[i]);
-    //printf("Up Deps to solve from Inst %d: %d\n",general_buffer->buffer[i]->id,calculate_up_deps(general_buffer->buffer[i]));
-  }
+  for(int i=0; i<get_size(general_buffer); i++)
+    calculate_up_deps(general_buffer->buffer[i]);
 
   /* ------- WRITE THE FIRST LINE IN THE OUTPUT FILE --------- */
   fprintf(f_out,"CLOCK CYCLE");
@@ -222,23 +184,19 @@ int main(int argc, char * argv[]){
   int completed = 0;
   int clock = 0;
   
-  printf("Starting algorithm\n");
-  
   completed_instructions = init_buffer(*number_of_instructions);
 
   while(!completed){
     if(clock >= MAXITER) break;
-    //printf("===================================\n");
-    //printf("CLOCK CYCLE %d\n",clock);
-    fprintf(f_out,"%d",clock);
-    //ends when all the instructions are in the completed list
+    //Ends when all the instructions are in the completed list
     if(completed_instructions->last == completed_instructions->size){
       completed=1;
-      printf("==================================\n");
       printf("Algorithm completed in %d cycles\n",clock-1);
-      printf("==================================\n");
     }
-    else step(*issue_width,*number_of_stations,f_out,general_buffer);
+    else{
+      fprintf(f_out,"%d",clock);
+      step(*issue_width,*number_of_stations,f_out,general_buffer);
+    }
     clock++;
   }
   return 0;

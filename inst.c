@@ -85,11 +85,7 @@ void manage_down_dependencies(inst_t * inst){
 
 void choose_rs(inst_t * inst){
 
-  // Chooses first RS possible
-  int possible_stations = get_numberofstations(inst);
-  printf("Instruction %d can be deployed to %d stations\n", inst->id, possible_stations);
   insert_element(inst->rs[0]->inst_buffer,inst);
-  printf("Inserted into RS %d\n", inst->rs[0]->id);
   
   /* STILL TO IMPLEMENT CHOOSE THE LEAST BUSY
   int min = INT_MAX;
