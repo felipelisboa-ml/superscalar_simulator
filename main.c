@@ -16,7 +16,20 @@ buffer_t * completed_instructions;
 void rob_management(inst_t * finished_inst, buffer_t * rob){
 }
 
-void step(int issue_width, int num_of_stations, buffer_t * inst_buffer){
+void write_to_file(FILE * f_out, reservation_station_t * res){
+  if(get_size(res->inst_buffer) == 0)
+    fprintf(f_out,"\t--");
+  else{
+    fprintf(f_out,"\t");
+    for(int k=0; k<get_size(res->inst_buffer); k++)
+	fprintf(f_out,"I%d ",res->inst_buffer->buffer[k]->id);
+  }
+  fprintf(f_out,"\t");
+  if(res->inst_id != NULL) fprintf(f_out,"I%d",res->inst_id->id);
+  else fprintf(f_out,"--");
+}
+
+void step(int issue_width, int num_of_stations, FILE * f_out,buffer_t * inst_buffer){
   
   /* --------  TAKES INSTRUCTIONS FROM QUEU AND PLACE INTO CORRESPONDING RESERVATION STATIONS -------- */
   
@@ -33,7 +46,7 @@ void step(int issue_width, int num_of_stations, buffer_t * inst_buffer){
     print_buffer(res_stations[i]->inst_buffer);
   }
   */
-  
+  fprintf(f_out,"\t");
   for(int i=0; i<num_of_stations; i++){
 
     /* -------------- LOOKS INTO BUFFER INSIDE THE CURRENT RESERVATION STATION ------------ */
@@ -45,6 +58,8 @@ void step(int issue_width, int num_of_stations, buffer_t * inst_buffer){
     case -1: printf("INSTRUCTIONS IN QUEU ARE NOT ELIGIBLE TO EXECUTE, STILL HAVE DEPS TO SOLVE\n"); break;
     default: break;
     }
+
+    write_to_file(f_out,res_stations[i]);
     
     /* ------------------- IF THERE IS CURRENTLY A INSTRUCTION IN THE FU ---------- */
     if(res_stations[i]->inst_id != NULL){
@@ -73,11 +88,7 @@ void step(int issue_width, int num_of_stations, buffer_t * inst_buffer){
       }
       
       /* ------- MANAGES THE ROB --------- */
-
-
-      /* ------- WRITES TO OUTPUT FILE -------- */
-
-
+      
       /* ------- DELETE FROM INTRUCTION FROM RS BUFFER */
       if(index_to_delete >= 0){
 	inst_t * deleted_instruction = remove_element(res_stations[i]->inst_buffer,index_to_delete);
@@ -86,12 +97,21 @@ void step(int issue_width, int num_of_stations, buffer_t * inst_buffer){
       }
     }
   }
+  fprintf(f_out,"\t--\n");
 }
 
-int main(){
+int main(int argc, char * argv[]){
 
+  if(argc!=2) {printf("Wrong usage!\n"); return 0;}
+  
   FILE * fp = NULL;
-  if((fp = fopen("inputs/test2.txt","r")) == NULL){
+  if((fp = fopen(argv[1],"r")) == NULL){
+    printf("Error opening file!\n");
+    return -1;
+  }
+
+  FILE * f_out = NULL;
+  if((f_out = fopen("outputs/output.txt","w")) == NULL){
     printf("Error opening file!\n");
     return -1;
   }
@@ -105,15 +125,15 @@ int main(){
   if(fscanf(fp,"%s %d",str,number_of_stations)!=2)
     printf("Error reading number of stations\n");
 
-  printf("Issue width: %d\n", *issue_width);
-  printf("Number of stations: %d\n", *number_of_stations);
+  //printf("Issue width: %d\n", *issue_width);
+  //printf("Number of stations: %d\n", *number_of_stations);
   
   int * stations_sizes[*number_of_stations];
   for(int i=0; i<(*number_of_stations); i++){
     stations_sizes[i] = (int*) malloc(sizeof(int));
     if(fscanf(fp,"%s %d", str, stations_sizes[i])!=2)
       printf("Error reading station sizes\n");
-    printf("Station %d size: %d \n", i,  *stations_sizes[i]);
+    //printf("Station %d size: %d \n", i,  *stations_sizes[i]);
   }
   
   //Init reservation stations
@@ -125,13 +145,13 @@ int main(){
   int * rob_size = (int*) malloc(sizeof(int));
   if(fscanf(fp,"%s %d", str, rob_size)!=2)
     printf("Error reading ROB SIZE\n");
-  printf("Rob size: %d\n", *rob_size);
+  //printf("Rob size: %d\n", *rob_size);
   buffer_t * rob = init_buffer(*rob_size);
 
   int * number_of_instructions = (int*) malloc(sizeof(int));
   if(fscanf(fp,"%s %d",str,number_of_instructions)!=2)
     printf("Error reading line INSTRUCTIONS!\n");
-  printf("Number of instructions: %d\n", *number_of_instructions);
+  //printf("Number of instructions: %d\n", *number_of_instructions);
 
   char c_rs_vector_sizes[MAXCHAR];
   char c_latencies[MAXCHAR];
@@ -144,9 +164,9 @@ int main(){
     //Instantiate instruction, its latencies and its pointers to reservation stations
     int size_rs = strlen(c_rs_vector_sizes);
     inst_t * inst = init_instruction(size_rs,c_latencies[0] - '0',i,c_rs_vector_sizes);
-    if(insert_element(general_buffer,inst))
-      printf("Instruction %d was added to general buffer\n", inst->id);
-    else
+    if(!insert_element(general_buffer,inst))
+      //printf("Instruction %d was added to general buffer\n", inst->id);
+      //else
       printf("Error adding Instruction %d to general buffer\n", inst->id);
   }
 
@@ -154,25 +174,22 @@ int main(){
   if(general_buffer->buffer == NULL)
     printf("Problem allocating memory\n");
   else{
-    //printf("Estado do pointer last: %d\n", general_buffer->last);
     for(int i=0; i<general_buffer->last; i++){
       if(general_buffer->buffer[i]==NULL)
 	printf("Problem allocating memory!\n");
     }
   }
-
-  //int * number_of_deps = (int*) malloc(sizeof(int));
   if(fscanf(fp,"%s",str)!=1)
     printf("Error reading dependencies header!\n");
 
-  printf("%s\n",str);
+  //printf("%s\n",str);
   char first_inst[MAXCHAR];
   char second_inst[MAXCHAR];
   int * lat_dep = (int*) malloc(sizeof(int));
   
   //Dependency part
   while(fscanf(fp,"%s %s %d",first_inst,second_inst,lat_dep)!=EOF){
-    printf("%s %s %d\n",first_inst,second_inst,*lat_dep);
+    //printf("%s %s %d\n",first_inst,second_inst,*lat_dep);
     int first_id = first_inst[1] - '0';
     int secnd_id = second_inst[1] - '0';
     inst_t * t1 = NULL;
@@ -184,40 +201,44 @@ int main(){
       else if(general_buffer->buffer[i]->id == secnd_id)
 	t2 = general_buffer->buffer[i];
     }
-    //printf("Dependency is from %d to %d and has value %d \n",t2->id, t1->id, *lat_dep);
     config_dependencies(t1,t2,*lat_dep);
-    //Test's dep_down buffer from father
-    //print_buffer(t1->dep_down);
-    //Test's dep_up buffer from child
-    //print_up_deps(t2);
-    //printf("------------------------------\n");
   }
 
   //Calculates the number of dependencies to solve for each instruction added to the buffer
   for(int i=0; i<get_size(general_buffer); i++){
-    printf("Up Deps to solve from Inst %d: %d\n",general_buffer->buffer[i]->id,calculate_up_deps(general_buffer->buffer[i]));
+    int x = calculate_up_deps(general_buffer->buffer[i]);
+    //printf("Up Deps to solve from Inst %d: %d\n",general_buffer->buffer[i]->id,calculate_up_deps(general_buffer->buffer[i]));
   }
+
+  /* ------- WRITE THE FIRST LINE IN THE OUTPUT FILE --------- */
+  fprintf(f_out,"CLOCK CYCLE");
+  for(int i=0; i<(*number_of_stations); i++){
+    fprintf(f_out,"\tRS%d \tFU%d",i,i);
+  }
+  fprintf(f_out,"\tROB\n");
+  /* -------------------------------------------------------------*/
   
   //Step function
   int completed = 0;
   int clock = 0;
-  printf("==================================\n");
+  
   printf("Starting algorithm\n");
   
   completed_instructions = init_buffer(*number_of_instructions);
 
   while(!completed){
     if(clock >= MAXITER) break;
-    printf("===================================\n");
-    printf("CLOCK CYCLE %d\n",clock);
+    //printf("===================================\n");
+    //printf("CLOCK CYCLE %d\n",clock);
+    fprintf(f_out,"%d",clock);
     //ends when all the instructions are in the completed list
     if(completed_instructions->last == completed_instructions->size){
       completed=1;
       printf("==================================\n");
-      printf("Algorithm completed!\n");
+      printf("Algorithm completed in %d cycles\n",clock-1);
       printf("==================================\n");
     }
-    else step(*issue_width,*number_of_stations,general_buffer);
+    else step(*issue_width,*number_of_stations,f_out,general_buffer);
     clock++;
   }
   return 0;
