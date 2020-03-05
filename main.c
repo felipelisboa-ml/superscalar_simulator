@@ -273,6 +273,8 @@ int main(int argc, char * argv[]){
       printf("==================================\n");
       printf("Algorithm completed in %d cycles\n",clock-1);
       printf("==================================\n");
+
+      printf("memory\n");
     }
     else {
       fprintf(f_out,"%d",clock);
