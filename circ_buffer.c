@@ -34,8 +34,9 @@ inst_t * remove_element_circ(circ_buffer_t * buf){
   else{
     next = (buf->head + 1) % (buf->size);    // next is where head will point to after this remove.
     inst_t * ref = buf->circ_buffer[buf->head];
-    buf->head = next;                       // head to next offset.
-   return ref;
+    //buf->circ_buffer[buf->head] = NULL;
+    buf->head = next;                       // head to next offset
+    return ref;
  }
 }
 

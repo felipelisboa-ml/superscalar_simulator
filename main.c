@@ -18,10 +18,12 @@ circ_buffer_t * rob;
 void rob_management(){
 	if(rob->circ_buffer[rob->head]->done == 1 && rob->circ_buffer[rob->head] != NULL){
 		if(rob->circ_buffer[(rob->head)+1]->done == 1 && rob->circ_buffer[(rob->head)+1]!= NULL){
-			remove_element_circ(rob);
-			remove_element_circ(rob);			
-		}
-	}		
+			inst_t * inst1 = remove_element_circ(rob);
+			inst_t * inst2 = remove_element_circ(rob);			
+		        printf("--------------------------------------- removed from rob I%d  & I%d\n",inst1->id,inst2->id);    
+
+		} 
+	}	
 }
 
 void write_to_file(FILE * f_out, reservation_station_t * res){
@@ -85,7 +87,7 @@ void step(int issue_width, int num_of_stations, FILE * f_out,buffer_t * inst_buf
       if(act_inst_latency <= 0){
 	insert_element(completed_instructions,current_inst);
 	res_stations[i]->inst_id = NULL;
-	//current_inst->done = 1;
+	current_inst->done = 1;
       }
 
       /* ------- IF THE CURRENT INSTRUCTION HAS CHILDREN, UPDATE THEIR DEPENDENCY LATENCIES ---------- */
@@ -97,8 +99,6 @@ void step(int issue_width, int num_of_stations, FILE * f_out,buffer_t * inst_buf
 	print_deps(current_inst);  
       }
       
-      /* ------- MANAGES THE ROB --------- */
-      rob_management();
       
       /* ------- DELETE FROM INTRUCTION FROM RS BUFFER ------ */
       if(index_to_delete >= 0){
@@ -107,12 +107,16 @@ void step(int issue_width, int num_of_stations, FILE * f_out,buffer_t * inst_buf
 	  printf("Instruction %d was deleted from RS %d instruction buffer \n", deleted_instruction->id, i);
       }
     }
+      /* ------- MANAGES THE ROB --------- */
+      rob_management();
   }
+
   /* ------------ WRITES IN ROB's COLUMN ------- */
   
   fprintf(f_out,"\t");
   for(int i=0;i<get_size_circ(rob);i++){
-	fprintf(f_out,"I%d ",rob->circ_buffer[i]->id);
+	if(rob->circ_buffer[i] != NULL)
+		fprintf(f_out,"I%d ",rob->circ_buffer[i]->id);
   }
   fprintf(f_out,"\n");
 }
