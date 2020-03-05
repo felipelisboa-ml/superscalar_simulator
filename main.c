@@ -15,12 +15,26 @@ buffer_t * general_buffer;
 buffer_t * completed_instructions;
 circ_buffer_t * rob;
 
-void rob_management(){
-  if(rob->circ_buffer[rob->head] != NULL && (rob->circ_buffer[(rob->head)+1]!= NULL)){
-    if((rob->circ_buffer[rob->head]->done == 1) && (rob->circ_buffer[(rob->head)+1]->done == 1)){
-      inst_t * inst1 = remove_element_circ(rob);
-      inst_t * inst2 = remove_element_circ(rob);			
-      printf("--------------------------------------- removed from rob I%d  & I%d\n",inst1->id,inst2->id);
+void rob_management(int commit_width){
+  inst_t * t = NULL;
+  if((circ_buffer_size(rob) - commit_width) >= 0){
+    int flag=0;
+    for(int i=0; i<commit_width; i++){
+      if(rob->buffer[rob->first+i] != NULL)
+	if(!(rob->buffer[rob->first+i]->done == 1))
+	  flag=1;
+    }
+    if(flag==0){
+      for(int i=0; i<commit_width; i++)
+	t = circ_buffer_get(rob);
+    }
+  }
+  //Independent way: for last removal on ROB
+  else{
+    for(int i=0; i<circ_buffer_size(rob); i++){
+      if(rob->buffer[rob->first] != NULL)
+	if(rob->buffer[rob->first]->done == 1)
+	  t = circ_buffer_get(rob);
     }
   }
 }
@@ -44,7 +58,9 @@ void step(int issue_width, int num_of_stations, FILE * f_out,buffer_t * inst_buf
   
   for(int i = 0; i<issue_width; i++){
     inst_t * new_inst = remove_element(general_buffer,0);
-    insert_element_circ(rob,new_inst);
+    if(new_inst != NULL)
+      if(circ_buffer_put(rob,new_inst)==0) printf("ROB is FULL!\n");
+    printf("Rob occupation: %d\n",circ_buffer_size(rob));
     if(new_inst!=NULL) choose_rs(new_inst);
   }
   
@@ -109,14 +125,14 @@ void step(int issue_width, int num_of_stations, FILE * f_out,buffer_t * inst_buf
       
   }
   /* ------- MANAGES THE ROB --------- */
-  rob_management();
-  printf("Rob size: %d\n", get_size_circ(rob));
+  rob_management(2);
+  printf("Rob occupation: %d\n",circ_buffer_size(rob));
   
   /* ------------ WRITES IN ROB's COLUMN ------- */
   fprintf(f_out,"\t");
-  for(int i=rob->head;i<((rob->head+get_size_circ(rob))%(rob->size));i++){
-    if(rob->circ_buffer[i] != NULL)
-      fprintf(f_out,"I%d ",rob->circ_buffer[i]->id);
+  for(int i=rob->first; i<(rob->first+circ_buffer_size(rob))%(rob->max_size); i++){
+    //if(rob->circ_buffer[i] != NULL)
+      fprintf(f_out,"I%d ",rob->buffer[i]->id);
   }
   fprintf(f_out,"\n");
 }
@@ -167,7 +183,7 @@ int main(int argc, char * argv[]){
   if(fscanf(fp,"%s %d", str, rob_size)!=2)
     printf("Error reading ROB SIZE\n");
   //printf("Rob size: %d\n", *rob_size);
-  rob = init_buffer_circ(*rob_size);
+  rob = circ_buffer_init(*rob_size);
 
   int * number_of_instructions = (int*) malloc(sizeof(int));
   if(fscanf(fp,"%s %d",str,number_of_instructions)!=2)
@@ -251,7 +267,6 @@ int main(int argc, char * argv[]){
     if(clock >= MAXITER) break;
     printf("===================================\n");
     printf("CLOCK CYCLE %d\n",clock);
-    fprintf(f_out,"%d",clock);
     //ends when all the instructions are in the completed list
     if(completed_instructions->last == completed_instructions->size){
       completed=1;
@@ -259,7 +274,10 @@ int main(int argc, char * argv[]){
       printf("Algorithm completed in %d cycles\n",clock-1);
       printf("==================================\n");
     }
-    else step(*issue_width,*number_of_stations,f_out,general_buffer);
+    else {
+      fprintf(f_out,"%d",clock);
+      step(*issue_width,*number_of_stations,f_out,general_buffer);
+    }
     clock++;
   }
   return 0;

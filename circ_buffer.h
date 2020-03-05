@@ -3,26 +3,23 @@
 
 #include "inst.h"
 
-typedef struct circ_buffer_t circ_buffer_t;
+typedef struct {
+  int first, last, size, max_size;
+  inst_t ** buffer;
+} circ_buffer_t;
 
-struct circ_buffer_t{
-    inst_t ** circ_buffer;
-    int head, tail;
-    int size;
-};
+// Allocate and initialize the circular buffer structure
+circ_buffer_t * circ_buffer_init(int size);
 
-//Inits the buffer
-circ_buffer_t * init_buffer_circ(int size);
+// Remove an element from circular buffer. When empty, return NULL.
+void * circ_buffer_get(circ_buffer_t * b);
 
-//Inserts new elements at the tail if possible
-int insert_element_circ(circ_buffer_t * buf, inst_t * added_inst);
+// Read (and do not remove) an element from circular buffer. When
+// empty, return NULL.
+void * circ_buffer_read(circ_buffer_t * b);
 
-//Removes element from the head
-inst_t * remove_element_circ(circ_buffer_t * buf);
+// Append an element into circular buffer. When full, return 0.
+int circ_buffer_put(circ_buffer_t * b, void * d);
 
-//Prints the buffer
-void print_buffer_circ(circ_buffer_t * buf);
-
-//Gets the current buffer occupation
-int get_size_circ(circ_buffer_t * buf);
+int circ_buffer_size(circ_buffer_t * b);
 #endif
