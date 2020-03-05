@@ -276,8 +276,7 @@ int main(int argc, char * argv[]){
     }
     else {
       fprintf(f_out,"%d",clock);
-      step(*issue_width,*number_of_stations,f_out,general_buffer);
->>>>>>> safe_working
+      step(*issue_width,*number_of_stations,f_out);
     }
     clock++;
   }
