@@ -4,16 +4,24 @@
 #include <stdlib.h>
 
 #include "inst.h"
+#include "circ_buffer.h"
 #include "reservation_station.h"
 
 #define SIZE_MAX_INSTRUCTION_BUFFER 16
 #define MAXITER 20
 
 reservation_station_t ** res_stations;
-buffer_t * general_buffer, rob;
+buffer_t * general_buffer;
 buffer_t * completed_instructions;
+circ_buffer_t * rob;
 
-void rob_management(inst_t * finished_inst, buffer_t * rob){
+void rob_management(){
+	if(rob->circ_buffer[rob->head]->done == 1 && rob->circ_buffer[rob->head] != NULL){
+		if(rob->circ_buffer[(rob->head)+1]->done == 1 && rob->circ_buffer[(rob->head)+1]!= NULL){
+			remove_element_circ(rob);
+			remove_element_circ(rob);			
+		}
+	}		
 }
 
 void write_to_file(FILE * f_out, reservation_station_t * res){
@@ -35,6 +43,7 @@ void step(int issue_width, int num_of_stations, FILE * f_out,buffer_t * inst_buf
   
   for(int i = 0; i<issue_width; i++){
     inst_t * new_inst = remove_element(general_buffer,0);
+    insert_element_circ(rob,new_inst);
     if(new_inst!=NULL) choose_rs(new_inst);
   }
   
@@ -76,6 +85,7 @@ void step(int issue_width, int num_of_stations, FILE * f_out,buffer_t * inst_buf
       if(act_inst_latency <= 0){
 	insert_element(completed_instructions,current_inst);
 	res_stations[i]->inst_id = NULL;
+	//current_inst->done = 1;
       }
 
       /* ------- IF THE CURRENT INSTRUCTION HAS CHILDREN, UPDATE THEIR DEPENDENCY LATENCIES ---------- */
@@ -88,8 +98,9 @@ void step(int issue_width, int num_of_stations, FILE * f_out,buffer_t * inst_buf
       }
       
       /* ------- MANAGES THE ROB --------- */
+      rob_management();
       
-      /* ------- DELETE FROM INTRUCTION FROM RS BUFFER */
+      /* ------- DELETE FROM INTRUCTION FROM RS BUFFER ------ */
       if(index_to_delete >= 0){
 	inst_t * deleted_instruction = remove_element(res_stations[i]->inst_buffer,index_to_delete);
 	if(deleted_instruction != NULL)
@@ -97,7 +108,13 @@ void step(int issue_width, int num_of_stations, FILE * f_out,buffer_t * inst_buf
       }
     }
   }
-  fprintf(f_out,"\t--\n");
+  /* ------------ WRITES IN ROB's COLUMN ------- */
+  
+  fprintf(f_out,"\t");
+  for(int i=0;i<get_size_circ(rob);i++){
+	fprintf(f_out,"I%d ",rob->circ_buffer[i]->id);
+  }
+  fprintf(f_out,"\n");
 }
 
 int main(int argc, char * argv[]){
@@ -146,7 +163,7 @@ int main(int argc, char * argv[]){
   if(fscanf(fp,"%s %d", str, rob_size)!=2)
     printf("Error reading ROB SIZE\n");
   //printf("Rob size: %d\n", *rob_size);
-  buffer_t * rob = init_buffer(*rob_size);
+  rob = init_buffer_circ(*rob_size);
 
   int * number_of_instructions = (int*) malloc(sizeof(int));
   if(fscanf(fp,"%s %d",str,number_of_instructions)!=2)

@@ -23,4 +23,6 @@ inst_t * remove_element_circ(circ_buffer_t * buf);
 //Prints the buffer
 void print_buffer_circ(circ_buffer_t * buf);
 
+//Gets the current buffer occupation
+int get_size_circ(circ_buffer_t * buf);
 #endif

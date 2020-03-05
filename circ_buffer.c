@@ -51,3 +51,14 @@ void print_buffer_circ(circ_buffer_t * buf){
     // to be continued for the case head > tail
   }
 }
+
+int get_size_circ(circ_buffer_t * buf){
+	inst_t * tmp = buf->circ_buffer[buf->head];
+	int size = 0,index=0;	
+	while(tmp != NULL){
+		size++;
+		index++;
+		tmp = buf->circ_buffer[index];
+	}	
+	return size;
+}

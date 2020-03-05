@@ -22,10 +22,9 @@ typedef struct{
 
 struct inst_t{
   reservation_station_t ** rs;
-  int initial_exec_latency,actual_exec_latency,num_of_dep,dep_to_solve,id,num_of_stations;
+  int initial_exec_latency,actual_exec_latency,num_of_dep,dep_to_solve,id,num_of_stations,done;
   pair_up_dependency ** dep_up;
   buffer_t * dep_down;
-  int done;
 };
 
 /* Responsable for initialzing basic fields of the instruction structure and atributing
