@@ -1,7 +1,6 @@
 CLOCK CYCLE	RS0 	FU0	RS1 	FU1	RS2 	FU2	ROB
 0		I0 I1 	I0	--	--	--	--	--
 1		I1 	I0	I2 	--	I3 	--	--
-<<<<<<< HEAD
 2		I1 I4 	I1	I2 I5 	--	I3 	--	--
 3		I4 	I1	I2 I5 	--	I3 	--	--
 4		I4 	I1	I2 I5 	I2	I3 	--	--
@@ -10,11 +9,3 @@ CLOCK CYCLE	RS0 	FU0	RS1 	FU1	RS2 	FU2	ROB
 7		I4 	I4	I5 	I2	--	I3	--
 8		--	I4	I5 	I5	--	--	--
 9		--	I4	--	--	--	--	--
-=======
-2		I1 I4 	I0	I2 I5 	--	I3 	--	--
-3		I1 I4 	I0	I2 I5 	--	I3 	--	--
-4		I1 I4 	I0	I2 I5 	--	I3 	--	--
-5		I1 I4 	I0	I2 I5 	--	I3 	--	--
-6		I1 I4 	I0	I2 I5 	--	I3 	--	--
-7
->>>>>>> added_features

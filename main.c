@@ -29,7 +29,7 @@ void write_to_file(FILE * f_out, reservation_station_t * res){
   else fprintf(f_out,"--");
 }
 
-void step(int issue_width, int num_of_stations, FILE * f_out,buffer_t * inst_buffer){
+void step(int issue_width, int num_of_stations, FILE * f_out){
   
   /* --------  TAKES INSTRUCTIONS FROM QUEU AND PLACE INTO CORRESPONDING RESERVATION STATIONS -------- */
   
@@ -230,7 +230,6 @@ int main(int argc, char * argv[]){
     if(clock >= MAXITER) break;
     printf("===================================\n");
     printf("CLOCK CYCLE %d\n",clock);
-    fprintf(f_out,"%d",clock);
     //ends when all the instructions are in the completed list
     if(completed_instructions->last == completed_instructions->size){
       completed=1;
@@ -238,7 +237,10 @@ int main(int argc, char * argv[]){
       printf("Algorithm completed in %d cycles\n",clock-1);
       printf("==================================\n");
     }
-    else step(*issue_width,*number_of_stations,f_out,general_buffer);
+    else{
+      fprintf(f_out,"%d",clock);
+      step(*issue_width,*number_of_stations,f_out);
+    }
     clock++;
   }
   return 0;
