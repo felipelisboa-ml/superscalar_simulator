@@ -21,6 +21,7 @@ void * circ_buffer_read(circ_buffer_t * b);
 // Append an element into circular buffer. When full, return 0.
 int circ_buffer_put(circ_buffer_t * b, void * d);
 
+// Returns number of elements present on circular buffer
 int circ_buffer_size(circ_buffer_t * b);
 
 #endif

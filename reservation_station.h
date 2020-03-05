@@ -8,7 +8,7 @@ typedef struct inst_t inst_t;
 typedef struct buffer_t buffer_t;
 typedef struct reservation_station_t reservation_station_t;
 
-reservation_station_t ** res_stations;
+extern reservation_station_t ** res_stations;
 
 struct reservation_station_t{
   buffer_t * inst_buffer;
