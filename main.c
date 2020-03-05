@@ -4,16 +4,39 @@
 #include <stdlib.h>
 
 #include "inst.h"
+#include "circ_buffer.h"
 #include "reservation_station.h"
 
 #define SIZE_MAX_INSTRUCTION_BUFFER 16
 #define MAXITER 20
 
 reservation_station_t ** res_stations;
-buffer_t * general_buffer, rob;
+buffer_t * general_buffer;
 buffer_t * completed_instructions;
+circ_buffer_t * rob;
 
-void rob_management(inst_t * finished_inst, buffer_t * rob){
+void rob_management(int commit_width){
+  inst_t * t = NULL;
+  if((circ_buffer_size(rob) - commit_width) >= 0){
+    int flag=0;
+    for(int i=0; i<commit_width; i++){
+      if(rob->buffer[rob->first+i] != NULL)
+	if(!(rob->buffer[rob->first+i]->done == 1))
+	  flag=1;
+    }
+    if(flag==0){
+      for(int i=0; i<commit_width; i++)
+	t = circ_buffer_get(rob);
+    }
+  }
+  //Independent way: for last removal on ROB
+  else{
+    for(int i=0; i<circ_buffer_size(rob); i++){
+      if(rob->buffer[rob->first] != NULL)
+	if(rob->buffer[rob->first]->done == 1)
+	  t = circ_buffer_get(rob);
+    }
+  }
 }
 
 void write_to_file(FILE * f_out, reservation_station_t * res){
@@ -35,6 +58,9 @@ void step(int issue_width, int num_of_stations, FILE * f_out){
   
   for(int i = 0; i<issue_width; i++){
     inst_t * new_inst = remove_element(general_buffer,0);
+    if(new_inst != NULL)
+      if(circ_buffer_put(rob,new_inst)==0) printf("ROB is FULL!\n");
+    printf("Rob occupation: %d\n",circ_buffer_size(rob));
     if(new_inst!=NULL) choose_rs(new_inst);
   }
   
@@ -76,6 +102,7 @@ void step(int issue_width, int num_of_stations, FILE * f_out){
       if(act_inst_latency <= 0){
 	insert_element(completed_instructions,current_inst);
 	res_stations[i]->inst_id = NULL;
+	current_inst->done = 1;
       }
 
       /* ------- IF THE CURRENT INSTRUCTION HAS CHILDREN, UPDATE THEIR DEPENDENCY LATENCIES ---------- */
@@ -87,17 +114,27 @@ void step(int issue_width, int num_of_stations, FILE * f_out){
 	print_deps(current_inst);  
       }
       
-      /* ------- MANAGES THE ROB --------- */
       
-      /* ------- DELETE FROM INTRUCTION FROM RS BUFFER */
+      /* ------- DELETE FROM INTRUCTION FROM RS BUFFER ------ */
       if(index_to_delete >= 0){
 	inst_t * deleted_instruction = remove_element(res_stations[i]->inst_buffer,index_to_delete);
 	if(deleted_instruction != NULL)
 	  printf("Instruction %d was deleted from RS %d instruction buffer \n", deleted_instruction->id, i);
       }
     }
+      
   }
-  fprintf(f_out,"\t--\n");
+  /* ------- MANAGES THE ROB --------- */
+  rob_management(2);
+  printf("Rob occupation: %d\n",circ_buffer_size(rob));
+  
+  /* ------------ WRITES IN ROB's COLUMN ------- */
+  fprintf(f_out,"\t");
+  for(int i=rob->first; i<(rob->first+circ_buffer_size(rob))%(rob->max_size); i++){
+    //if(rob->circ_buffer[i] != NULL)
+      fprintf(f_out,"I%d ",rob->buffer[i]->id);
+  }
+  fprintf(f_out,"\n");
 }
 
 int main(int argc, char * argv[]){
@@ -146,7 +183,7 @@ int main(int argc, char * argv[]){
   if(fscanf(fp,"%s %d", str, rob_size)!=2)
     printf("Error reading ROB SIZE\n");
   //printf("Rob size: %d\n", *rob_size);
-  buffer_t * rob = init_buffer(*rob_size);
+  rob = circ_buffer_init(*rob_size);
 
   int * number_of_instructions = (int*) malloc(sizeof(int));
   if(fscanf(fp,"%s %d",str,number_of_instructions)!=2)
@@ -237,9 +274,10 @@ int main(int argc, char * argv[]){
       printf("Algorithm completed in %d cycles\n",clock-1);
       printf("==================================\n");
     }
-    else{
+    else {
       fprintf(f_out,"%d",clock);
-      step(*issue_width,*number_of_stations,f_out);
+      step(*issue_width,*number_of_stations,f_out,general_buffer);
+>>>>>>> safe_working
     }
     clock++;
   }

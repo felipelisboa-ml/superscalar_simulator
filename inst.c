@@ -17,6 +17,7 @@ inst_t * init_instruction(int size_rs, int init_lat, int id, char vec_sizes[MAXC
   t->dep_down = NULL;
   t->dep_up = NULL;
   t->dep_to_solve = 0;
+  t->done = 0;
   return t;
 }
 
