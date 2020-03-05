@@ -40,7 +40,7 @@ void config_dependencies(inst_t * up_inst, inst_t * down_inst, int dep_val);
 /* See's how many upward dependencies a given instruction has */
 int calculate_up_deps(inst_t * inst);
 
-/* This function updates the upwards dependencies of all intructions in the downward dependency vector  of a given instruction */
+/* This function updates the upwards dependencies of all intructions in the downward dependency vector of a given instruction */
 void manage_down_dependencies(inst_t * inst);
 
 /* Updates its own execution latency */
@@ -59,8 +59,6 @@ void print_deps(inst_t * inst);
 /* SOME GETTERS */
 int get_init_num_of_dep(inst_t * inst);
 int get_numberofstations(inst_t * inst);
-
-
 
 #endif
 

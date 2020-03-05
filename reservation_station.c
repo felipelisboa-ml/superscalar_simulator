@@ -14,16 +14,6 @@ void * is_occupied(reservation_station_t * rs){
   return rs->inst_id;
 }
 
-int check_if_empty(reservation_station_t * rs){
-  //Return 0 if there is at least one instruction that isn't NULL
-  for(int i=0; i<rs->inst_buffer->size; i++){
-    if(rs->inst_buffer->buffer[i]!=NULL)
-      return 0;
-  }
-  //Return 1 if it's empty
-  return 1;
-}
-
 int put_into_FU(reservation_station_t * res){
   int del_index=-1;
   int limite = get_size(res->inst_buffer);

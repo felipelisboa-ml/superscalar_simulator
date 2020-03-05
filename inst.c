@@ -88,7 +88,7 @@ void choose_rs(inst_t * inst){
 
   insert_element(inst->rs[0]->inst_buffer,inst);
   
-  /* STILL TO IMPLEMENT CHOOSE THE LEAST BUSY
+  /* STILL TO IMPLEMENT CHOOSING THE LEAST BUSY
   int min = INT_MAX;
   int indice_res = 0;
   for(int j=0; j<get_numberofstations(inst); j++){
