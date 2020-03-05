@@ -16,13 +16,14 @@ buffer_t * completed_instructions;
 circ_buffer_t * rob;
 
 void rob_management(){
-	if(rob->circ_buffer[rob->head] != NULL)
-		if(rob->circ_buffer[rob->head]->done == 1 )
-			if(rob->circ_buffer[(rob->head)+1]!= NULL)
-				if(rob->circ_buffer[(rob->head)+1]->done == 1){
-					inst_t * inst1 = remove_element_circ(rob);
-					inst_t * inst2 = remove_element_circ(rob);			
-		        		printf("--------------------------------------- removed from rob I%d  & I%d\n",inst1->id,inst2->id);   }
+		if(rob->circ_buffer[rob->head] != NULL)
+			if(rob->circ_buffer[rob->head]->done == 1 )
+				if(rob->circ_buffer[(rob->head)+1]!= NULL)
+					if(rob->circ_buffer[(rob->head)+1]->done == 1){
+						inst_t * inst1 = remove_element_circ(rob);
+						inst_t * inst2 = remove_element_circ(rob);			
+						printf("---------------- removed from rob I%d  & I%d\n",inst1->id,inst2->id);  
+					}
 }
 
 void write_to_file(FILE * f_out, reservation_station_t * res){
@@ -113,7 +114,7 @@ void step(int issue_width, int num_of_stations, FILE * f_out,buffer_t * inst_buf
   /* ------------ WRITES IN ROB's COLUMN ------- */
   
   fprintf(f_out,"\t");
-  for(int i=rob->head;i<get_size_circ(rob);i++){
+  for(int i=rob->head;i<((rob->head+get_size_circ(rob))%(rob->size));i++){
 	if(rob->circ_buffer[i] != NULL)
 		fprintf(f_out,"I%d ",rob->circ_buffer[i]->id);
   }

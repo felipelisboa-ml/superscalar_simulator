@@ -34,12 +34,11 @@ inst_t * remove_element_circ(circ_buffer_t * buf){
   else{
     next = (buf->head + 1) % (buf->size);    // next is where head will point to after this remove.
     inst_t * ref = buf->circ_buffer[buf->head];
-    //buf->circ_buffer[buf->head] = NULL;
     buf->head = next;                       // head to next offset
     return ref;
  }
 }
-
+/*
 //Prints the circular buffer
 void print_buffer_circ(circ_buffer_t * buf){
   int i = buf->head;
@@ -51,15 +50,13 @@ void print_buffer_circ(circ_buffer_t * buf){
     }
     // to be continued for the case head > tail
   }
-}
+}*/
 
 int get_size_circ(circ_buffer_t * buf){
-	inst_t * tmp = buf->circ_buffer[buf->head];
-	int size = 0,index=0;	
-	while(tmp != NULL){
+	int size = 0,index=buf->head;	
+	while(index != buf->tail){
 		size++;
-		index++;
-		tmp = buf->circ_buffer[index];
+		index = (index+1)%(buf->size);
 	}	
 	return size;
 }
