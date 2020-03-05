@@ -25,22 +25,21 @@ int check_if_empty(reservation_station_t * rs){
 }
 
 int put_into_FU(reservation_station_t * res){
-  int del_index=0;
+  int del_index=-1;
   int limite = get_size(res->inst_buffer);
   if(limite == 0)
     return -3;
+  else if(is_occupied(res)!=NULL)
+    return -2;
+  /* Chooses the first available instruction in QUEU */
   else{
-    for(int j=0; j < limite; j++){
-      if(is_occupied(res)!=NULL)
-        return -2;
-      else if(res->inst_buffer->buffer[j]->dep_to_solve > 0)
-        return -1;
-      else{
-      	res->inst_id = res->inst_buffer->buffer[j];
-      	del_index = j;
-      	break;
-      }
+    for(int j=0; j<limite; j++){
+      if(res->inst_buffer->buffer[j]->dep_to_solve <= 0){
+	res->inst_id = res->inst_buffer->buffer[j];
+	del_index = j;
+	return del_index;
+      } 
     }
+    return del_index;
   }
-  return del_index;
 }
