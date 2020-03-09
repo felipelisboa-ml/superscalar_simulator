@@ -87,17 +87,17 @@ void manage_down_dependencies(inst_t * inst){
 void choose_rs(inst_t * inst){
 
   insert_element(inst->rs[0]->inst_buffer,inst);
-  
+
   /* STILL TO IMPLEMENT CHOOSE THE LEAST BUSY
   int min = INT_MAX;
   int indice_res = 0;
   for(int j=0; j<get_numberofstations(inst); j++){
-    
+
     if(get_size(inst->rs[j]->inst_buffer) < min){
       min = get_size(inst->rs[j]->inst_buffer);
       indice_res = j;
     }
-  }rintf("Chosen RS for instruction %d: %d\n", new_inst->id, rs);
+  }printf("Chosen RS for instruction %d: %d\n", new_inst->id, rs);
   insert_element(inst->rs[indice_res]->inst_buffer,inst);
   print_buffer(inst->rs[indice_res]->inst_buffer);
   return indice_res;
@@ -142,6 +142,7 @@ int get_init_num_of_dep(inst_t * inst){
   return inst->num_of_dep;
 }
 
-
-
-
+void free_instruction(inst_t * inst){
+  free(inst);
+  inst=NULL;
+}

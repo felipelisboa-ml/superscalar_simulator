@@ -38,8 +38,13 @@ int put_into_FU(reservation_station_t * res){
 	res->inst_id = res->inst_buffer->buffer[j];
 	del_index = j;
 	return del_index;
-      } 
+      }
     }
     return del_index;
   }
+}
+
+void free_res_station(reservation_station_t * res){
+    free_buffer(res->inst_buffer);
+    free_instruction(res->inst_id);
 }

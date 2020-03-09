@@ -22,5 +22,6 @@ inst_t * remove_element(buffer_t * buf, int pos);
 int get_size(buffer_t * buf);
 //Prints the buffer
 void print_buffer(buffer_t * buf);
-  
+
+void free_buffer(buffer_t * buf);
 #endif

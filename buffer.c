@@ -9,7 +9,7 @@ buffer_t * init_buffer(int size){
   b->size = size;
   return b;
 }
- 
+
 //Add following FIFO policy (adds into the end of the list)
 int insert_element(buffer_t * buf, inst_t * added_inst){
   if(buf->last >= buf->size)
@@ -41,4 +41,12 @@ void print_buffer(buffer_t * buf){
     printf("Position %d: Instruction %d of latency %d\n", i,buf->buffer[i]->id,buf->buffer[i]->initial_exec_latency);
     //show_host_rs(buf->buffer[i]);
   }
+}
+
+void free_buffer(buffer_t * buf){
+  for(int i=0;i<buf->size;i++){
+    free_instruction(buf->buffer[i]);
+  }
+  free(buf);
+  buf=NULL;
 }

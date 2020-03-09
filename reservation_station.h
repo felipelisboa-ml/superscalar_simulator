@@ -31,10 +31,12 @@ int check_if_empty(reservation_station_t * rs);
    It returns -3 in case the queu is already empty
    It returns -2 in case the RS is currently occupied
    It returns -1 in case the intructions in the quere have unsolved dependencies
-   Otherwise it returns the index of the chosen intruction going into FU, 
+   Otherwise it returns the index of the chosen intruction going into FU,
    this index will later be used to delete it from the RS buffer
 */
 int put_into_FU(reservation_station_t * res);
 
+/* free memory */
+void free_res_station(reservation_station_t * res);
 
 #endif

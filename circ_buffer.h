@@ -23,4 +23,6 @@ int circ_buffer_put(circ_buffer_t * b, void * d);
 
 int circ_buffer_size(circ_buffer_t * b);
 
+void free_circ_buffer(circ_buffer_t * b);
+
 #endif

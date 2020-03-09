@@ -39,3 +39,11 @@ int circ_buffer_put(circ_buffer_t * b, void * d){
 int circ_buffer_size(circ_buffer_t * b) {
   return b->size;
 }
+
+void free_circ_buffer(circ_buffer_t * b){
+  for(int i=0;i<b->max_size;i++){
+    free_instruction(b->buffer[i]);
+  }
+  free(b);
+  b=NULL;
+}

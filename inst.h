@@ -33,7 +33,7 @@ struct inst_t{
  */
 inst_t * init_instruction(int size_rs, int init_lat, int id, char vec_sizes[MAXCHAR]);
 
-/* This function is used to configure the dependency atributes coming from the graph 
+/* This function is used to configure the dependency atributes coming from the graph
  */
 void config_dependencies(inst_t * up_inst, inst_t * down_inst, int dep_val);
 
@@ -46,11 +46,11 @@ void manage_down_dependencies(inst_t * inst);
 /* Updates its own execution latency */
 int manage_own_latency(inst_t * inst);
 
-/* This function is responsible to choose a reservation instruction for a given instruction 
+/* This function is responsible to choose a reservation instruction for a given instruction
    It takes the choise to put in the first option, but that could be changed
 */
 void choose_rs(inst_t * inst);
- 
+
 /* DEBUGGING FUNCTIONS */
 void show_host_rs(inst_t * inst);
 void print_up_deps(inst_t * inst);
@@ -60,8 +60,8 @@ void print_deps(inst_t * inst);
 int get_init_num_of_dep(inst_t * inst);
 int get_numberofstations(inst_t * inst);
 
+/* Free memory */
+void free_instruction(inst_t * inst);
 
 
 #endif
-
-
