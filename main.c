@@ -10,6 +10,7 @@
 #define SIZE_MAX_INSTRUCTION_BUFFER 16
 #define MAXITER 20
 
+//eita
 reservation_station_t ** res_stations;
 buffer_t * general_buffer;
 buffer_t * completed_instructions;
