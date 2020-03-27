@@ -1,7 +1,7 @@
 #include "buffer.h"
 #include <stdlib.h>
 #include <stdio.h>
-
+//oioeieoiaodhajfhnsjahfiuas
 buffer_t * init_buffer(int size){
   buffer_t * b = (buffer_t *) malloc(sizeof(buffer_t));
   b->buffer = (inst_t**) malloc (size*sizeof(inst_t*));

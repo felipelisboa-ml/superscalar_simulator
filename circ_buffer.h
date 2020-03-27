@@ -2,7 +2,7 @@
 #define CIRC_BUFFER_H
 
 #include "inst.h"
-
+//oi thalyssa
 typedef struct {
   int first, last, size, max_size;
   inst_t ** buffer;
